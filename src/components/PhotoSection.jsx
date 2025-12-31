@@ -102,7 +102,7 @@ function PhotoSection({ todayEntry }) {
                 )}
             </div>
 
-            <input type="file" ref={fileInputRef} accept="image/*" capture="environment" onChange={handleInputChange} className="hidden" />
+            <input type="file" ref={fileInputRef} accept="image/*" onChange={handleInputChange} className="hidden" />
 
             {/* Upload Bottom Sheet */}
             <AnimatePresence>

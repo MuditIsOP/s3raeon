@@ -208,10 +208,15 @@ function MorningSection({ todayEntry, isUnlocked }) {
 
             <AnimatePresence mode="wait">
                 {!isUnlocked ? (
-                    <motion.div key="locked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="locked-state">
-                        <div className="icon"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg></div>
-                        <p className="title">5 - 10 AM</p>
-                        <p className="subtitle">Record your affirmation</p>
+                    <motion.div key="locked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-4">
+                        <p className="text-sm italic mb-4 px-2" style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>"{affirmation}"</p>
+                        <div className="h-16 w-full rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-muted)] text-sm mb-4 opacity-50">
+                            Visualizer locked
+                        </div>
+                        <button disabled className="btn-secondary w-full opacity-75 cursor-not-allowed">
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            Locked until 5:00 AM
+                        </button>
                     </motion.div>
                 ) : tooShort ? (
                     <motion.div key="too-short" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-4">
