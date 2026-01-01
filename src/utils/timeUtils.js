@@ -29,7 +29,7 @@ export const getCurrentHourIST = () => {
  */
 export const isMorningTime = () => {
     const hour = getCurrentHourIST();
-    return hour >= 5 && hour < 14;
+    return hour >= 5 && hour < 10;
 };
 
 /**
