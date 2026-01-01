@@ -64,7 +64,7 @@ Key files:
 
 ## Security
 
-- The current AuthScreen stores the password and recovery QA in plain JSON (data/config.json) in your Storj bucket. This is suitable for a personal projects. Password are encrypted and stored securely
+- The current AuthScreen stores the password and recovery QA in your Storj bucket. This is suitable for a personal projects. Password are encrypted and stored securely.
 
 ## Getting Started
 
