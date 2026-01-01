@@ -62,12 +62,9 @@ Key files:
 - vite.config.js – PWA config, cache rules
 - tailwind.config.js – Theme, colors, fonts
 
-## Security note
+## Security
 
-- The current AuthScreen stores the password and recovery QA in plain JSON (data/config.json) in your Storj bucket. This is suitable for a personal project but not production. For stronger security:
-  - Add server-side auth and encryption
-  - Use proper secrets management
-  - Avoid storing passwords unencrypted in object storage
+- The current AuthScreen stores the password and recovery QA in plain JSON (data/config.json) in your Storj bucket. This is suitable for a personal projects. Password are encrypted and stored securely
 
 ## Getting Started
 
