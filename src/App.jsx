@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import MilestonePopup from './components/MilestonePopup';
 import TermsModal from './components/TermsModal';
 import GuidelinesModal from './components/GuidelinesModal';
+import AuthScreen from './components/AuthScreen';
 
 // Create context for shared state
 export const DiaryContext = createContext();
@@ -178,6 +179,14 @@ function App() {
         togglePhotoStar,
         toggleDayStar,
     };
+
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    // ... rest of effects ...
+
+    if (!isAuthenticated) {
+        return <AuthScreen onAuthenticated={() => setIsAuthenticated(true)} />;
+    }
 
     // 1. Show Guidelines First
     if (!guidelinesAccepted) {

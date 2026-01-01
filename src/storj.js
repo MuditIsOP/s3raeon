@@ -154,3 +154,38 @@ export default {
     getEntry,
     getPresignedUrl,
 };
+// Load App Config (Password, etc.)
+export const loadConfig = async () => {
+    try {
+        const command = new GetObjectCommand({
+            Bucket: STORJ_CONFIG.bucket,
+            Key: 'data/config.json',
+        });
+        const response = await s3Client.send(command);
+        const str = await response.Body.transformToString();
+        return JSON.parse(str);
+    } catch (error) {
+        if (error.name === 'NoSuchKey') {
+            return null; // No config yet (first run)
+        }
+        console.error('Error loading config:', error);
+        return null; // Fail safe
+    }
+};
+
+// Save App Config
+export const saveConfig = async (config) => {
+    try {
+        const command = new PutObjectCommand({
+            Bucket: STORJ_CONFIG.bucket,
+            Key: 'data/config.json',
+            Body: JSON.stringify(config),
+            ContentType: 'application/json',
+        });
+        await s3Client.send(command);
+        return true;
+    } catch (error) {
+        console.error('Error saving config:', error);
+        throw error;
+    }
+};
