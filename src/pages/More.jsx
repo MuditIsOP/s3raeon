@@ -41,9 +41,26 @@ function More() {
         URL.revokeObjectURL(url);
     };
 
+    const handleEnableNotifications = async () => {
+        try {
+            const { requestForToken } = await import('../firebase');
+            const token = await requestForToken();
+            if (token) {
+                navigator.clipboard.writeText(token);
+                alert("✨ Notifications Enabled! \n\nA special connection code has been copied to your clipboard. \n\nPlease send this code to Mudit so he can send you reminders! 💌");
+            } else {
+                alert("Permission needed for notifications.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Failed to enable notifications.");
+        }
+    };
+
     const menuItems = [
         { title: 'Calendar', desc: 'View by date', icon: MENU_ICONS.calendar, path: '/calendar' },
         { title: 'Search', desc: 'Find entries', icon: MENU_ICONS.search, action: () => setShowSearch(true) },
+        { title: 'Notifications', desc: 'Enable reminders', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>, action: handleEnableNotifications },
         { title: 'Usage Guidelines', desc: 'How to use S3RΛEON', icon: MENU_ICONS.guidelines, action: () => setShowGuidelines(true) },
         { title: 'Terms & Conditions', desc: 'View agreed terms', icon: MENU_ICONS.terms, action: () => setShowTerms(true) },
         { title: 'Export', desc: 'Backup data', icon: MENU_ICONS.export, action: handleExport },

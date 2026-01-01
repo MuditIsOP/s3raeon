@@ -57,6 +57,16 @@ function App() {
 
         if (terms === 'true') setTermsAccepted(true);
         if (guide === 'true') setGuidelinesAccepted(true);
+
+        // Firebase Foreground Listener
+        import('./firebase').then(({ onMessageListener }) => {
+            onMessageListener().then(payload => {
+                console.log('Foreground Message:', payload);
+                // Optional: Show a toast here if you want
+                // For now, simpler is better. Browsers handle "Notification" api if focused sometimes specific ways.
+                // But normally we just let the logic run.
+            }).catch(err => console.log('failed: ', err));
+        });
     }, []);
 
     // Load entries from Storj on mount

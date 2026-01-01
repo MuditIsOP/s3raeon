@@ -3,11 +3,11 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Storj S3-compatible configuration
 const STORJ_CONFIG = {
-    accessKeyId: 'jvpikdtk2ueqylglupmzlpg6mvqa',
-    secretAccessKey: 'jz6zn4h5tw22342g5taa6j7w4ugkrfacuikfrkf7wbv5jxywtuxmi',
-    endpoint: 'https://gateway.storjshare.io',
-    bucket: 'arshita-diary',
-    region: 'us-east-1',
+    accessKeyId: import.meta.env.VITE_STORJ_ACCESS_KEY,
+    secretAccessKey: import.meta.env.VITE_STORJ_SECRET_KEY,
+    endpoint: import.meta.env.VITE_STORJ_ENDPOINT || 'https://gateway.storjshare.io',
+    bucket: import.meta.env.VITE_STORJ_BUCKET || 'arshita-diary',
+    region: import.meta.env.VITE_STORJ_REGION || 'us-east-1',
 };
 
 // Create S3 client configured for Storj
