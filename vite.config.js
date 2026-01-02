@@ -42,12 +42,16 @@ export default defineConfig({
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/gateway\.storjshare\.io\/.*/i,
-            handler: 'CacheFirst',
+            handler: 'NetworkFirst',
             options: {
-              cacheName: 'storj-cache',
+              cacheName: 'storj-data-cache',
+              networkTimeoutSeconds: 3, // Fallback to cache if network is slow
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 1 day cache for freshness
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           }
