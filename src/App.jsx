@@ -71,7 +71,81 @@ function App() {
         });
     }, []);
 
-    // ... (existing code) ...
+    // Load entries from Storj on mount
+    useEffect(() => {
+        async function fetchEntries() {
+            try {
+                // Add 10s timeout to prevent infinite hanging
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Network timeout')), 10000)
+                );
+
+                const entriesData = await Promise.race([
+                    loadEntries(),
+                    timeoutPromise
+                ]);
+
+                setEntries(entriesData || {});
+
+                // Update today's entry
+                const today = getTodayIST();
+                setTodayEntry(entriesData?.[today] || null);
+
+                // Calculate streak
+                const streak = calculateCurrentStreak(entriesData || {});
+                setCurrentStreak(streak);
+            } catch (error) {
+                console.error('Error loading entries:', error);
+                // Fallback to empty state on error/timeout
+                setEntries({});
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchEntries();
+    }, []);
+
+    const saveEntry = async (date, entry) => {
+        const newEntries = { ...entries, [date]: entry };
+        setEntries(newEntries);
+        setTodayEntry(entry);
+        await storjSaveEntry(date, entry);
+
+        // Check for milestones after saving
+        const streak = calculateCurrentStreak(newEntries);
+        setCurrentStreak(streak);
+        const newMilestone = checkMilestone(streak);
+        if (newMilestone) {
+            setMilestone(newMilestone);
+            setShowMilestone(true);
+        }
+    };
+
+    const togglePhotoStar = (date, photoIndex) => {
+        setEntries(prevEntries => {
+            const updatedEntries = { ...prevEntries };
+            if (updatedEntries[date] && updatedEntries[date].photos) {
+                const photo = updatedEntries[date].photos[photoIndex];
+                if (photo) {
+                    photo.starred = !photo.starred;
+                    storjSaveEntry(date, updatedEntries[date]); // Save updated entry
+                }
+            }
+            return updatedEntries;
+        });
+    };
+
+    const toggleDayStar = (date) => {
+        setEntries(prevEntries => {
+            const updatedEntries = { ...prevEntries };
+            if (updatedEntries[date]) {
+                updatedEntries[date].starred = !updatedEntries[date].starred;
+                storjSaveEntry(date, updatedEntries[date]); // Save updated entry
+            }
+            return updatedEntries;
+        });
+    };
 
     const handleAcceptTerms = () => {
         setTermsAccepted(true);
@@ -88,12 +162,33 @@ function App() {
         localStorage.setItem('s3raeon_v2_seen', 'true');
     };
 
-    // ... (contextValue definition) ...
+    const contextValue = {
+        entries,
+        todayEntry,
+        loading,
+        currentStreak,
+        saveEntry,
+        togglePhotoStar,
+        toggleDayStar,
+    };
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     if (!isAuthenticated) {
         return <AuthScreen onAuthenticated={() => setIsAuthenticated(true)} />;
+    }
+
+    // 0. Loading State (Show this BEFORE modals to avoid "stuck" feeling)
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+                <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)' }}>
+                        <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     // 1. Show Guidelines First
@@ -109,18 +204,6 @@ function App() {
     // 3. Show Updates Third (Only if onboarding complete)
     if (!updatesSeen) {
         return <UpdatesModal onClose={handleSeenUpdates} />;
-    }
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-                <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)' }}>
-                        <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                </div>
-            </div>
-        );
     }
 
     return (
