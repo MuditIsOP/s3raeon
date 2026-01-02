@@ -81,6 +81,10 @@ function More() {
         { title: 'Export', desc: 'Backup data', icon: MENU_ICONS.export, action: handleExport },
     ];
 
+    const handleResultClick = (date) => {
+        navigate('/calendar', { state: { date } });
+    };
+
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="page">
             <Header title="More" />
@@ -95,7 +99,7 @@ function More() {
                     </div>
                     {searchResults.length === 0 && searchQuery.length >= 2 && <p className="text-center py-8" style={{ color: 'var(--text-muted)' }}>No results</p>}
                     {searchResults.map((r) => (
-                        <div key={r.date} className="card mb-3">
+                        <div key={r.date} onClick={() => handleResultClick(r.date)} className="card mb-3 cursor-pointer hover:bg-white/5 transition-colors">
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="text-sm font-semibold text-gradient">{formatDate(r.date)}</span>
                             </div>

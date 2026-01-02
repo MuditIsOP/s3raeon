@@ -1,18 +1,37 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDiary } from '../App';
 import { getCurrentMonthYear, getDaysInMonth, getTodayIST, isFutureDate } from '../utils/timeUtils';
 import { DateTime } from 'luxon';
 import Header from '../components/Header';
+import DayViewModal from '../components/DayViewModal';
 
 function Calendar() {
     const { entries } = useDiary();
     const navigate = useNavigate();
+    const location = useLocation();
     const today = getTodayIST();
     const currentMonthData = getCurrentMonthYear();
+
+    // Default to current month, unless deep link provided
     const [viewMonth, setViewMonth] = useState(currentMonthData.month);
     const [viewYear, setViewYear] = useState(currentMonthData.year);
+    const [selectedDate, setSelectedDate] = useState(null);
+
+    // Deep Linking Effect
+    useEffect(() => {
+        if (location.state?.date) {
+            const date = DateTime.fromISO(location.state.date);
+            if (date.isValid) {
+                setViewMonth(date.month);
+                setViewYear(date.year);
+                setSelectedDate(location.state.date);
+                // Clear state so back button works nicely
+                navigate(location.pathname, { replace: true, state: {} });
+            }
+        }
+    }, [location.state, navigate]);
 
     const days = getDaysInMonth(viewYear, viewMonth);
     const monthLabel = DateTime.fromObject({ year: viewYear, month: viewMonth }).toFormat('MMMM yyyy');
@@ -52,7 +71,21 @@ function Calendar() {
                         else if (isFuture) className += ' future';
                         else if (entry?.completed) className += ' completed';
 
-                        return <div key={dateStr} className={className}>{dayNum}</div>;
+                        const handleClick = () => {
+                            if (!isFuture && entry) {
+                                setSelectedDate(dateStr);
+                            }
+                        };
+
+                        return (
+                            <div
+                                key={dateStr}
+                                className={`${className} ${!isFuture && entry ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+                                onClick={handleClick}
+                            >
+                                {dayNum}
+                            </div>
+                        );
                     })}
                 </div>
             </div>
@@ -70,6 +103,16 @@ function Calendar() {
                     </div>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {selectedDate && (
+                    <DayViewModal
+                        date={selectedDate}
+                        entry={entries[selectedDate]}
+                        onClose={() => setSelectedDate(null)}
+                    />
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }
