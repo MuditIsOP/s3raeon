@@ -23,14 +23,29 @@ function More() {
     const [showTerms, setShowTerms] = useState(false);
     const [showGuidelines, setShowGuidelines] = useState(false);
 
+    // Load all entries sorted by date (descending) when search opens
+    const allEntries = Object.entries(entries)
+        .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+        .map(([date, entry]) => ({ date, excerpt: entry.journal, mood: entry.mood }));
+
     const handleSearch = (query) => {
         setSearchQuery(query);
-        if (query.trim().length < 2) { setSearchResults([]); return; }
-        const results = [];
-        Object.entries(entries).forEach(([date, entry]) => {
-            if (entry.journal?.toLowerCase().includes(query.toLowerCase())) results.push({ date, excerpt: entry.journal, mood: entry.mood });
-        });
-        setSearchResults(results.slice(0, 10));
+        if (!query.trim()) {
+            setSearchResults(allEntries);
+            return;
+        }
+        const lowerQuery = query.toLowerCase();
+        const filtered = allEntries.filter(item =>
+            item.excerpt?.toLowerCase().includes(lowerQuery) ||
+            formatDate(item.date).toLowerCase().includes(lowerQuery)
+        );
+        setSearchResults(filtered);
+    };
+
+    // Initialize search results when opening search
+    const openSearch = () => {
+        setShowSearch(true);
+        setSearchResults(allEntries);
     };
 
     const handleExport = () => {
@@ -59,7 +74,7 @@ function More() {
 
     const menuItems = [
         { title: 'Calendar', desc: 'View by date', icon: MENU_ICONS.calendar, path: '/calendar' },
-        { title: 'Search', desc: 'Find entries', icon: MENU_ICONS.search, action: () => setShowSearch(true) },
+        { title: 'Search', desc: 'Find entries', icon: MENU_ICONS.search, action: openSearch },
         { title: 'Notifications', desc: 'Enable reminders', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>, action: handleEnableNotifications },
         { title: 'Usage Guidelines', desc: 'How to use S3RΛEON', icon: MENU_ICONS.guidelines, action: () => setShowGuidelines(true) },
         { title: 'Terms & Conditions', desc: 'View agreed terms', icon: MENU_ICONS.terms, action: () => setShowTerms(true) },
