@@ -37,7 +37,7 @@ export const isMorningTime = () => {
  */
 export const isEveningTime = () => {
     const hour = getCurrentHourIST();
-    return hour >= 20; // 8 PM to 11:59 PM
+    return hour >= 18; // 8 PM to 11:59 PM
 };
 
 /**
