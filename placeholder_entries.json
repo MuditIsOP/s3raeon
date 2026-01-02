@@ -1,26 +1,50 @@
 {
     "2026-01-01": {
-        "journal": "First day of the year! Started with gratitude and a clear mind. The sunrise was beautiful today.",
-        "mood": "excited",
+        "audioUrl": "https://gateway.storjshare.io/arshita-diary/audio/2026-01-01-morning.webm?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=jvpikdtk2ueqylglupmzlpg6mvqa%2F20260101%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260101T074502Z&X-Amz-Expires=604800&X-Amz-Signature=81ff30a7fb2e636193479bf44489790cba3c9dea959c6c32853b6fd8ba933ffb&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+        "morningCompleted": true,
+        "eveningCompleted": true,
+        "completed": true,
         "photos": [
             {
-                "url": "",
-                "timestamp": 1767225600000,
-                "starred": true
+                "url": "https://gateway.storjshare.io/arshita-diary/photos/2026-01-02/1767376787247.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=jvpikdtk2ueqylglupmzlpg6mvqa%2F20260102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260102T175948Z&X-Amz-Expires=604800&X-Amz-Signature=ac4bbe1d2c4ff9e977688e5472c39f1bbbb53a2fe6b47c800bb1c09503d3ad2c&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+                "timestamp": "2026-01-02T17:59:48.297Z",
+                "starred": false
+            },
+            {
+                "url": "https://gateway.storjshare.io/arshita-diary/photos/2026-01-02/1767376795379.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=jvpikdtk2ueqylglupmzlpg6mvqa%2F20260102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260102T175956Z&X-Amz-Expires=604800&X-Amz-Signature=dfd69664edea0f6dc5e3ccc1161698e8e7a220a00a54173f8713edab36490dce&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+                "timestamp": "2026-01-02T17:59:56.465Z",
+                "starred": false
+            },
+            {
+                "url": "https://gateway.storjshare.io/arshita-diary/photos/2026-01-02/1767376802627.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=jvpikdtk2ueqylglupmzlpg6mvqa%2F20260102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260102T180003Z&X-Amz-Expires=604800&X-Amz-Signature=d7996237e83bbdf4cb1dcff1ef6638025f890176edc07be45379027d56533b99&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+                "timestamp": "2026-01-02T18:00:03.742Z",
+                "starred": false
+            },
+            {
+                "url": "https://gateway.storjshare.io/arshita-diary/photos/2026-01-02/1767376811290.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=jvpikdtk2ueqylglupmzlpg6mvqa%2F20260102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260102T180018Z&X-Amz-Expires=604800&X-Amz-Signature=765d8dc6a216860f17467d5dd5e5515b15c71e6963914d73631ee30367768633&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+                "timestamp": "2026-01-02T18:00:18.752Z",
+                "starred": false
+            },
+            {
+                "url": "https://gateway.storjshare.io/arshita-diary/photos/2026-01-02/1767376846203.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=jvpikdtk2ueqylglupmzlpg6mvqa%2F20260102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260102T180047Z&X-Amz-Expires=604800&X-Amz-Signature=87c34a233b20056d6d8649423d40fa0a4b0f7974b9a72af7c7644f733e672de5&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+                "timestamp": "2026-01-02T18:00:47.969Z",
+                "starred": false
             }
         ],
-        "audioUrl": "",
-        "completed": true,
-        "starred": true,
-        "updatedAt": "2026-01-01T10:30:00.000Z"
+        "updatedAt": "2026-01-01T18:19:22.694Z",
+        "journal": "My day started with my dad waking me up and asking what to eat as usual, I saw the clock it was about 9AM, I brushed my teeth, cuz I skipped skincare and brushing last night. I remembered My baby just released the final season, I hopped on my lappy and it was decent I'd say, like things escalated quickly it kinda hushed and was done with this around 11AM . I went for the shower, and helped mom in the kitchen with the serving and dressings (mom made chote bhatures today :)) Then mudit was calling like he made me this app today itself, I came to know about it at 11:30. I went on the terrace to talk to him also had a sun bath (it was much needed). Then mom was in my room sleeping, I joined her and woke up at 5. I remembered I gotta collect my glasses at Lenskart but mom was like it's too late now. So we'll do that tomorrow.\nAfter dinner (I should have skipped it), I was so bloated, skipped milk tonight. And yeah the heater kinda broke in my room, we both placed a service review (me and dad). It was woking just fine when I got out for the shower. We moved the downstairs heater here, it's in my room rn.\nNow that question this year I'll see many many things like yes I did change my school in '20 and school got over in '22 but this year it's just not my degree is over but I have to get a job or internship or gotta crack CAT or I'll be labelled \"unemployed\", many my friends will move out, and I have to too. Things will change drastically this year. College will be finally over, people be looking for jobs or masters or to like settle, I'll officially be 21 this year and idk what will happen after college, will I have good people around? Will I be happy? Will I be proud of myself?, I wish oh I wish I had the answer to these but that's not how life works.\nAbout the short term goals I want at least two titles in modelling (gotta tell my kinda I was a model once), get my sole back cleared, score decent in the final sem and get an internship and go for CAT.",
+        "mood": 3,
+        "prompt": "How was your day? It's a new year! What intentions are you setting for the year ahead?"
     },
     "2026-01-02": {
-        "journal": "Day 2. Keeping the momentum going. Focused on work and spent time with family.",
-        "mood": "happy",
-        "photos": [],
-        "audioUrl": "",
+        "audioUrl": "https://gateway.storjshare.io/arshita-diary/audio/2026-01-02-morning.webm?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=jvpikdtk2ueqylglupmzlpg6mvqa%2F20260102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260102T132149Z&X-Amz-Expires=604800&X-Amz-Signature=3d67813eade4d21a62f5c7b39a8cb3570bc01412eda8a7ca5c9f20208e3fe2c2&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+        "morningCompleted": true,
+        "eveningCompleted": false,
         "completed": true,
-        "starred": false,
-        "updatedAt": "2026-01-02T20:15:00.000Z"
+        "affirmation": "Today, I am stunning and I will not let insecurity tell me otherwise. My beauty is evident in every feature - my skin glows, my hair frames my face perfectly, and my body is exactly as it should be. I look in the mirror and I see someone truly beautiful, someone worthy of admiration and love. Today, I refuse to compare myself to anyone else because my beauty is unique and incomparable. I am gorgeous in my own right, and that is enough. Today, I will not waste time procrastinating. Every task I need to complete, I will start immediately without overthinking. Procrastination is just fear in disguise, and today I am fearless. I take the first step, then the next, and I keep moving forward with confidence. When it comes to my studies today, I am laser-focused and dedicated. I eliminate all distractions and I give my full attention to learning. My mind is sharp, my memory is strong, and I retain everything I study. Today, I am beautiful, I am action-oriented, and I am committed to my education. I will end this day proud of what I accomplished.",
+        "updatedAt": "2026-01-02T17:26:15.415Z",
+        "journal": "",
+        "mood": 0,
+        "photos": []
     }
 }
