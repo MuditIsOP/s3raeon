@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDiary } from '../App';
 import { formatDate } from '../utils/timeUtils';
 import Header from '../components/Header';
@@ -13,20 +13,28 @@ const MENU_ICONS = {
     export: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
     terms: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
     guidelines: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+    voice: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>,
 };
 
 function More() {
     const { entries } = useDiary();
+    const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [showSearch, setShowSearch] = useState(false);
+    const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [showGuidelines, setShowGuidelines] = useState(false);
 
     // Load all entries sorted by date (descending) when search opens
     const allEntries = Object.entries(entries)
         .sort((a, b) => new Date(b[0]) - new Date(a[0]))
-        .map(([date, entry]) => ({ date, excerpt: entry.journal, mood: entry.mood }));
+        .map(([date, entry]) => ({
+            date,
+            excerpt: entry.journal,
+            mood: entry.mood,
+            hasAudio: !!entry.audio
+        }));
 
     const handleSearch = (query) => {
         setSearchQuery(query);
@@ -44,8 +52,16 @@ function More() {
 
     // Initialize search results when opening search
     const openSearch = () => {
+        setIsVoiceMode(false);
         setShowSearch(true);
         setSearchResults(allEntries);
+    };
+
+    const openVoiceJourney = () => {
+        setIsVoiceMode(true);
+        setShowSearch(true);
+        const voiceEntries = allEntries.filter(e => e.hasAudio);
+        setSearchResults(voiceEntries);
     };
 
     const handleExport = () => {
@@ -75,6 +91,7 @@ function More() {
     const menuItems = [
         { title: 'Calendar', desc: 'View by date', icon: MENU_ICONS.calendar, path: '/calendar' },
         { title: 'Search', desc: 'Find entries', icon: MENU_ICONS.search, action: openSearch },
+        { title: 'Voice Journey', desc: 'Listen to past affirmations', icon: MENU_ICONS.voice, action: openVoiceJourney },
         { title: 'Notifications', desc: 'Enable reminders', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>, action: handleEnableNotifications },
         { title: 'Usage Guidelines', desc: 'How to use S3RΛEON', icon: MENU_ICONS.guidelines, action: () => setShowGuidelines(true) },
         { title: 'Terms & Conditions', desc: 'View agreed terms', icon: MENU_ICONS.terms, action: () => setShowTerms(true) },
@@ -92,18 +109,35 @@ function More() {
             {showSearch ? (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                     <div className="flex items-center gap-3 mb-4">
-                        <button onClick={() => { setShowSearch(false); setSearchQuery(''); setSearchResults([]); }} className="btn-icon">
+                        <button onClick={() => { setShowSearch(false); setSearchQuery(''); setSearchResults([]); setIsVoiceMode(false); }} className="btn-icon">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                         </button>
-                        <input type="text" value={searchQuery} onChange={(e) => handleSearch(e.target.value)} placeholder="Search..." className="input-field flex-1" autoFocus />
+                        {isVoiceMode ? (
+                            <h2 className="text-lg font-bold text-gradient flex-1">Voice Journey</h2>
+                        ) : (
+                            <input type="text" value={searchQuery} onChange={(e) => handleSearch(e.target.value)} placeholder="Search..." className="input-field flex-1" autoFocus />
+                        )}
                     </div>
-                    {searchResults.length === 0 && searchQuery.length >= 2 && <p className="text-center py-8" style={{ color: 'var(--text-muted)' }}>No results</p>}
+                    {searchResults.length === 0 && !isVoiceMode && searchQuery.length >= 2 && <p className="text-center py-8" style={{ color: 'var(--text-muted)' }}>No results</p>}
+                    {searchResults.length === 0 && isVoiceMode && (
+                        <div className="text-center py-12">
+                            <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center bg-white/5 text-gray-500">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                            </div>
+                            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No voice affirmations yet</p>
+                        </div>
+                    )}
                     {searchResults.map((r) => (
                         <div key={r.date} onClick={() => handleResultClick(r.date)} className="card mb-3 cursor-pointer hover:bg-white/5 transition-colors">
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="text-sm font-semibold text-gradient">{formatDate(r.date)}</span>
                             </div>
-                            <p className="text-sm line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{r.excerpt}</p>
+                            <p className="text-sm line-clamp-2" style={{
+                                color: r.excerpt ? 'var(--text-secondary)' : 'var(--text-muted)',
+                                fontStyle: r.excerpt ? 'normal' : 'italic'
+                            }}>
+                                {r.excerpt || "Journal not written yet"}
+                            </p>
                         </div>
                     ))}
                 </motion.div>

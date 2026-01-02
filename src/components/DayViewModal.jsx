@@ -11,6 +11,7 @@ const STORJ_CONFIG = {
 
 function DayViewModal({ date, entry, onClose }) {
     const [photoUrls, setPhotoUrls] = useState({});
+    const [audioUrl, setAudioUrl] = useState(null);
 
     useEffect(() => {
         if (entry?.photos) {
@@ -33,6 +34,28 @@ function DayViewModal({ date, entry, onClose }) {
                     }
                 }
             });
+        }
+
+        if (entry?.audio) {
+            const loadAudio = async () => {
+                try {
+                    let url = entry.audio;
+                    // If stored as key (not full URL), sign it
+                    if (!url.startsWith('http')) {
+                        const command = new GetObjectCommand({
+                            Bucket: STORJ_CONFIG.bucket,
+                            Key: url
+                        });
+                        url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+                    }
+                    setAudioUrl(url);
+                } catch (e) {
+                    console.error("Failed to load audio", e);
+                }
+            };
+            loadAudio();
+        } else {
+            setAudioUrl(null);
         }
     }, [entry]);
 
@@ -104,16 +127,26 @@ function DayViewModal({ date, entry, onClose }) {
                         </p>
                     </div>
 
-                    {/* Voice Note Status */}
+                    {/* Voice Note Player */}
                     {entry.audio && (
-                        <div className="p-3 rounded-lg flex items-center gap-3" style={{ background: 'var(--bg-elevated)' }}>
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500/20 text-green-400">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        <div className="p-4 rounded-xl space-y-3" style={{ background: 'var(--bg-elevated)' }}>
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500/20 text-green-400">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium">Voice Affirmation</p>
+                                    <p className="text-xs opacity-60">Recorded on {formatDate(date)}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-sm font-medium">Voice Note Recorded</p>
-                                <p className="text-xs opacity-60">Voice notes can only be played on the day they were recorded.</p>
-                            </div>
+
+                            {audioUrl ? (
+                                <audio controls src={audioUrl} className="w-full h-8" style={{ filter: 'invert(1) hue-rotate(180deg)' }} />
+                            ) : (
+                                <div className="h-8 flex items-center justify-center">
+                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
