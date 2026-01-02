@@ -36,10 +36,10 @@ function DayViewModal({ date, entry, onClose }) {
             });
         }
 
-        if (entry?.audio) {
+        if (entry?.audioUrl) {
             const loadAudio = async () => {
                 try {
-                    let url = entry.audio;
+                    let url = entry.audioUrl;
                     // If stored as key (not full URL), sign it
                     if (!url.startsWith('http')) {
                         const command = new GetObjectCommand({
@@ -128,7 +128,7 @@ function DayViewModal({ date, entry, onClose }) {
                     </div>
 
                     {/* Voice Note Player */}
-                    {entry.audio && (
+                    {entry.audioUrl && (
                         <div className="p-4 rounded-xl space-y-3" style={{ background: 'var(--bg-elevated)' }}>
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500/20 text-green-400">

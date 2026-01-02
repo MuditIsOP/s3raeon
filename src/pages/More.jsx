@@ -33,7 +33,7 @@ function More() {
             date,
             excerpt: entry.journal,
             mood: entry.mood,
-            hasAudio: !!entry.audio
+            hasAudio: !!entry.audioUrl
         }));
 
     const handleSearch = (query) => {
