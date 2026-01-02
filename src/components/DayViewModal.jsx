@@ -77,7 +77,7 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
         5: { label: 'Hard', emoji: '😣', color: '#ef4444' },  // Hard -> Tired/Stressed
     };
 
-    const moodData = MOODS[entry.mood] || MOODS.neutral;
+    const moodData = MOODS[entry.mood];
 
     return (
         <>
@@ -105,10 +105,12 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h2 className="text-xl font-bold text-gradient">{formatDate(date)}</h2>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xl">{moodData.emoji}</span>
-                            <span className="text-xs font-medium" style={{ color: moodData.color }}>{moodData.label}</span>
-                        </div>
+                        {moodData && (
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xl">{moodData.emoji}</span>
+                                <span className="text-xs font-medium" style={{ color: moodData.color }}>{moodData.label}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
