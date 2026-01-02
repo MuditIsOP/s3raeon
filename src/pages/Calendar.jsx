@@ -14,10 +14,10 @@ function Calendar() {
     const today = getTodayIST();
     const currentMonthData = getCurrentMonthYear();
 
-    // Default to current month, unless deep link provided
     const [viewMonth, setViewMonth] = useState(currentMonthData.month);
     const [viewYear, setViewYear] = useState(currentMonthData.year);
     const [selectedDate, setSelectedDate] = useState(null);
+    const [viewMode, setViewMode] = useState('full');
 
     // Deep Linking Effect
     useEffect(() => {
@@ -27,6 +27,7 @@ function Calendar() {
                 setViewMonth(date.month);
                 setViewYear(date.year);
                 setSelectedDate(location.state.date);
+                setViewMode(location.state.viewMode || 'full');
                 // Clear state so back button works nicely
                 navigate(location.pathname, { replace: true, state: {} });
             }
@@ -74,6 +75,7 @@ function Calendar() {
                         const handleClick = () => {
                             if (!isFuture && entry) {
                                 setSelectedDate(dateStr);
+                                setViewMode('full'); // Default to full when clicking in calendar
                             }
                         };
 
@@ -109,6 +111,7 @@ function Calendar() {
                     <DayViewModal
                         date={selectedDate}
                         entry={entries[selectedDate]}
+                        mode={viewMode}
                         onClose={() => setSelectedDate(null)}
                     />
                 )}

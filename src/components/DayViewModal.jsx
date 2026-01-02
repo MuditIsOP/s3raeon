@@ -9,7 +9,7 @@ const STORJ_CONFIG = {
     bucket: import.meta.env.VITE_STORJ_BUCKET || 'arshita-diary',
 };
 
-function DayViewModal({ date, entry, onClose }) {
+function DayViewModal({ date, entry, onClose, mode = 'full' }) {
     const [photoUrls, setPhotoUrls] = useState({});
     const [audioUrl, setAudioUrl] = useState(null);
 
@@ -72,7 +72,7 @@ function DayViewModal({ date, entry, onClose }) {
     const moodData = MOODS[entry.mood] || MOODS.neutral;
 
     return (
-        <div className="fixed inset-0 z-[50] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[50] flex items-end justify-center sm:items-center p-0 sm:p-4">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -82,69 +82,77 @@ function DayViewModal({ date, entry, onClose }) {
             />
 
             <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="card w-full max-w-lg max-h-[85vh] overflow-y-auto relative z-10 p-0"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="card w-full max-w-lg max-h-[90vh] overflow-y-auto relative z-10 p-0 rounded-t-3xl rounded-b-none sm:rounded-3xl"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="sticky top-0 p-4 border-b border-white/10 flex items-center justify-between backdrop-blur-xl bg-[#1c1c1e]/80 z-20">
+                <div className="sticky top-0 p-5 border-b border-white/10 flex items-center justify-between backdrop-blur-xl bg-[#1c1c1e]/80 z-20">
                     <div>
-                        <h2 className="text-lg font-bold text-gradient">{formatDate(date)}</h2>
+                        <h2 className="text-xl font-bold text-gradient">{formatDate(date)}</h2>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="text-xl">{moodData.emoji}</span>
                             <span className="text-xs font-medium" style={{ color: moodData.color }}>{moodData.label}</span>
                         </div>
                     </div>
-                    <button onClick={onClose} className="btn-icon">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
-                <div className="p-5 space-y-6">
-                    {/* Photos */}
+                <div className="p-6 space-y-8 pb-12">
+                    {/* Photos - Hide in Voice Mode */}
                     {entry.photos && entry.photos.length > 0 && (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-3">
                             {entry.photos.map((photo, i) => (
-                                <div key={i} className="aspect-square rounded-xl overflow-hidden bg-white/5 relative">
+                                <div key={i} className="aspect-square rounded-2xl overflow-hidden bg-white/5 relative shadow-lg">
                                     {photoUrls[i] ? (
                                         <img src={photoUrls[i]} alt="Memory" className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-xs text-muted">Loading...</div>
                                     )}
-                                    {photo.starred && <div className="absolute top-2 right-2 text-yellow-400">★</div>}
+                                    {photo.starred && <div className="absolute top-2 right-2 text-yellow-400 drop-shadow-md">★</div>}
                                 </div>
                             ))}
                         </div>
                     )}
 
-                    {/* Journal */}
-                    <div className="space-y-2">
-                        <h3 className="text-xs font-bold uppercase tracking-wider opacity-60">Journal Entry</h3>
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
-                            {entry.journal || "No written entry for this day."}
-                        </p>
-                    </div>
+                    {/* Journal - Hide in Voice Mode */}
+                    {(
+                        <div className="space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider opacity-50 flex items-center gap-2">
+                                <span className="w-1 h-1 rounded-full bg-current"></span>
+                                Journal Entry
+                            </h3>
+                            <p className="text-base leading-relaxed whitespace-pre-wrap font-light" style={{ color: 'var(--text-secondary)' }}>
+                                {entry.journal || "No written entry for this day."}
+                            </p>
+                        </div>
+                    )}
 
-                    {/* Voice Note Player */}
+                    {/* Voice Note Player - Always Show */}
                     {entry.audioUrl && (
-                        <div className="p-4 rounded-xl space-y-3" style={{ background: 'var(--bg-elevated)' }}>
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500/20 text-green-400">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        <div className="p-5 rounded-2xl space-y-4 border border-white/5" style={{ background: 'var(--bg-elevated)' }}>
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-500/10 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium">Voice Affirmation</p>
+                                    <p className="text-base font-semibold">Voice Affirmation</p>
                                     <p className="text-xs opacity-60">Recorded on {formatDate(date)}</p>
                                 </div>
                             </div>
 
                             {audioUrl ? (
-                                <audio controls src={audioUrl} className="w-full h-8" style={{ filter: 'invert(1) hue-rotate(180deg)' }} />
+                                <div className="bg-black/20 rounded-xl p-2">
+                                    <audio controls src={audioUrl} className="w-full h-8" style={{ filter: 'invert(1) hue-rotate(180deg)' }} />
+                                </div>
                             ) : (
-                                <div className="h-8 flex items-center justify-center">
-                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                <div className="h-10 flex items-center justify-center bg-black/10 rounded-xl">
+                                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin opacity-50"></div>
                                 </div>
                             )}
                         </div>

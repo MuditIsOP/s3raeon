@@ -99,7 +99,12 @@ function More() {
     ];
 
     const handleResultClick = (date) => {
-        navigate('/calendar', { state: { date } });
+        navigate('/calendar', {
+            state: {
+                date,
+                viewMode: isVoiceMode ? 'voice' : 'full'
+            }
+        });
     };
 
     return (
