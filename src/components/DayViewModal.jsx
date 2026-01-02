@@ -62,11 +62,19 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
     if (!entry) return null;
 
     const MOODS = {
+        // String keys (Legacy)
         happy: { label: 'Happy', emoji: '😊', color: '#22c55e' },
         sad: { label: 'Sad', emoji: '😔', color: '#ef4444' },
         neutral: { label: 'Okay', emoji: '😐', color: '#eab308' },
         excited: { label: 'Excited', emoji: '🤩', color: '#a855f7' },
         tired: { label: 'Tired', emoji: '😴', color: '#64748b' },
+
+        // Integer keys (MoodPicker 1-5)
+        1: { label: 'Great', emoji: '🤩', color: '#22c55e' }, // Great -> Excited/Happy
+        2: { label: 'Good', emoji: '😊', color: '#84cc16' },  // Good -> Happy
+        3: { label: 'Okay', emoji: '😐', color: '#eab308' },  // Okay -> Neutral
+        4: { label: 'Low', emoji: '😔', color: '#f97316' },   // Low -> Sad
+        5: { label: 'Hard', emoji: '😣', color: '#ef4444' },  // Hard -> Tired/Stressed
     };
 
     const moodData = MOODS[entry.mood] || MOODS.neutral;
