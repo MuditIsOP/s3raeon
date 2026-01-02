@@ -72,25 +72,29 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
     const moodData = MOODS[entry.mood] || MOODS.neutral;
 
     return (
-        <div className="fixed inset-0 z-[50] flex items-end justify-center sm:items-center p-0 sm:p-4">
+        <>
             <motion.div
+                key="backdrop"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="modal-backdrop"
             />
 
             <motion.div
+                key="sheet"
                 initial={{ y: '100%' }}
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="card w-full max-w-lg max-h-[90vh] overflow-y-auto relative z-10 p-0 rounded-t-3xl rounded-b-none sm:rounded-3xl"
+                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                className="bottom-sheet"
                 onClick={e => e.stopPropagation()}
             >
+                <div className="sheet-handle" />
+
                 {/* Header */}
-                <div className="sticky top-0 p-5 border-b border-white/10 flex items-center justify-between backdrop-blur-xl bg-[#1c1c1e]/80 z-20">
+                <div className="flex items-center justify-between mb-6">
                     <div>
                         <h2 className="text-xl font-bold text-gradient">{formatDate(date)}</h2>
                         <div className="flex items-center gap-2 mt-1">
@@ -98,14 +102,11 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                             <span className="text-xs font-medium" style={{ color: moodData.color }}>{moodData.label}</span>
                         </div>
                     </div>
-                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
                 </div>
 
-                <div className="p-6 space-y-8 pb-12">
+                <div className="space-y-8 pb-8">
                     {/* Photos - Hide in Voice Mode */}
-                    {entry.photos && entry.photos.length > 0 && (
+                    {mode !== 'voice' && entry.photos && entry.photos.length > 0 && (
                         <div className="grid grid-cols-2 gap-3">
                             {entry.photos.map((photo, i) => (
                                 <div key={i} className="aspect-square rounded-2xl overflow-hidden bg-white/5 relative shadow-lg">
@@ -121,14 +122,14 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                     )}
 
                     {/* Journal - Hide in Voice Mode */}
-                    {(
+                    {mode !== 'voice' && entry.journal && (
                         <div className="space-y-3">
                             <h3 className="text-xs font-bold uppercase tracking-wider opacity-50 flex items-center gap-2">
                                 <span className="w-1 h-1 rounded-full bg-current"></span>
                                 Journal Entry
                             </h3>
                             <p className="text-base leading-relaxed whitespace-pre-wrap font-light" style={{ color: 'var(--text-secondary)' }}>
-                                {entry.journal || "No written entry for this day."}
+                                {entry.journal}
                             </p>
                         </div>
                     )}
@@ -157,9 +158,16 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                             )}
                         </div>
                     )}
+
+                    {/* Fallback for empty entries */}
+                    {mode !== 'voice' && !entry.journal && (!entry.photos || entry.photos.length === 0) && !entry.audioUrl && (
+                        <p className="text-center text-sm py-8" style={{ color: 'var(--text-muted)' }}>No details for this entry.</p>
+                    )}
+
+                    <div className="h-4"></div>
                 </div>
             </motion.div>
-        </div>
+        </>
     );
 }
 
