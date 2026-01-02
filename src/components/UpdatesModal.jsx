@@ -3,28 +3,28 @@ import { motion } from 'framer-motion';
 function UpdatesModal({ onClose }) {
     const updates = [
         {
-            title: "Magic Updates 🪄",
+            title: "Magic Updates",
             desc: "The app now updates itself! New features appear automatically.",
             icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
             color: "text-blue-400",
             bg: "bg-blue-500/10"
         },
         {
-            title: "Voice Journey 🎙️",
+            title: "Voice Journey",
             desc: "Listen to all your past affirmations in one place. (Now with 'Voice Mode'!)",
             icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>,
             color: "text-green-400",
             bg: "bg-green-500/10"
         },
         {
-            title: "Smart Search 🔍",
+            title: "Smart Search",
             desc: "Find any memory instantly. History is now always visible.",
             icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
             color: "text-purple-400",
             bg: "bg-purple-500/10"
         },
         {
-            title: "Smoother Experience 🚀",
+            title: "Smoother Experience",
             desc: "Faster animations, fixed bugs, and cleaner UI.",
             icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
             color: "text-yellow-400",
@@ -54,7 +54,7 @@ function UpdatesModal({ onClose }) {
                     >
                         New Update
                     </motion.div>
-                    <h2 className="text-3xl font-bold font-display text-white mb-2">S3RΛEON 2.0 ✨</h2>
+                    <h2 className="text-3xl font-bold font-display text-white mb-2">S3RΛEON 2.0</h2>
                     <p className="text-[var(--text-muted)] text-sm">Better. Faster. Smarter.</p>
                 </div>
 
@@ -82,7 +82,7 @@ function UpdatesModal({ onClose }) {
                     onClick={onClose}
                     className="w-full py-3.5 rounded-xl font-semibold bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transform hover:-translate-y-0.5 transition-all relative z-10"
                 >
-                    Awesome! 🚀
+                    Awesome!
                 </button>
             </motion.div>
         </motion.div>
