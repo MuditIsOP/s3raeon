@@ -1,0 +1,26 @@
+{
+    "2026-01-01": {
+        "journal": "First day of the year! Started with gratitude and a clear mind. The sunrise was beautiful today.",
+        "mood": "excited",
+        "photos": [
+            {
+                "url": "",
+                "timestamp": 1767225600000,
+                "starred": true
+            }
+        ],
+        "audioUrl": "",
+        "completed": true,
+        "starred": true,
+        "updatedAt": "2026-01-01T10:30:00.000Z"
+    },
+    "2026-01-02": {
+        "journal": "Day 2. Keeping the momentum going. Focused on work and spent time with family.",
+        "mood": "happy",
+        "photos": [],
+        "audioUrl": "",
+        "completed": true,
+        "starred": false,
+        "updatedAt": "2026-01-02T20:15:00.000Z"
+    }
+}
