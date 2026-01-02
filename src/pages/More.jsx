@@ -6,6 +6,7 @@ import { formatDate } from '../utils/timeUtils';
 import Header from '../components/Header';
 import TermsModal from '../components/TermsModal';
 import GuidelinesModal from '../components/GuidelinesModal';
+import DayViewModal from '../components/DayViewModal';
 
 const MENU_ICONS = {
     calendar: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
@@ -25,6 +26,8 @@ function More() {
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [showGuidelines, setShowGuidelines] = useState(false);
+
+    const [selectedVoiceDate, setSelectedVoiceDate] = useState(null);
 
     // Load all entries sorted by date (descending) when search opens
     const allEntries = Object.entries(entries)
@@ -99,12 +102,16 @@ function More() {
     ];
 
     const handleResultClick = (date) => {
-        navigate('/calendar', {
-            state: {
-                date,
-                viewMode: isVoiceMode ? 'voice' : 'full'
-            }
-        });
+        if (isVoiceMode) {
+            setSelectedVoiceDate(date);
+        } else {
+            navigate('/calendar', {
+                state: {
+                    date,
+                    viewMode: 'full'
+                }
+            });
+        }
     };
 
     return (
@@ -182,6 +189,14 @@ function More() {
             <AnimatePresence>
                 {showTerms && <TermsModal onClose={() => setShowTerms(false)} readOnly={true} />}
                 {showGuidelines && <GuidelinesModal onClose={() => setShowGuidelines(false)} readOnly={true} />}
+                {selectedVoiceDate && (
+                    <DayViewModal
+                        date={selectedVoiceDate}
+                        entry={entries[selectedVoiceDate]}
+                        mode="voice"
+                        onClose={() => setSelectedVoiceDate(null)}
+                    />
+                )}
             </AnimatePresence>
         </motion.div>
     );
