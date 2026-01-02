@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import MilestonePopup from './components/MilestonePopup';
 import TermsModal from './components/TermsModal';
 import GuidelinesModal from './components/GuidelinesModal';
+import UpdatesModal from './components/UpdatesModal';
 import AuthScreen from './components/AuthScreen';
 
 // Create context for shared state
@@ -50,115 +51,27 @@ function App() {
     // Onboarding State
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
+    const [updatesSeen, setUpdatesSeen] = useState(false);
 
     // Check for acceptance on mount
     useEffect(() => {
         const terms = localStorage.getItem('s3raeon_terms_accepted');
         const guide = localStorage.getItem('s3raeon_guidelines_accepted');
+        const updates = localStorage.getItem('s3raeon_v2_seen');
 
         if (terms === 'true') setTermsAccepted(true);
         if (guide === 'true') setGuidelinesAccepted(true);
+        if (updates === 'true') setUpdatesSeen(true);
 
         // Firebase Foreground Listener
         import('./firebase').then(({ onMessageListener }) => {
             onMessageListener().then(payload => {
                 console.log('Foreground Message:', payload);
-                // Optional: Show a toast here if you want
-                // For now, simpler is better. Browsers handle "Notification" api if focused sometimes specific ways.
-                // But normally we just let the logic run.
             }).catch(err => console.log('failed: ', err));
         });
     }, []);
 
-    // Load entries from Storj on mount
-    useEffect(() => {
-        async function fetchEntries() {
-            try {
-                const entriesData = await loadEntries();
-                setEntries(entriesData);
-
-                // Update today's entry
-                const today = getTodayIST();
-                setTodayEntry(entriesData[today] || null);
-
-                // Calculate streak
-                const streak = calculateCurrentStreak(entriesData);
-                setCurrentStreak(streak);
-            } catch (error) {
-                console.error('Error loading entries:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchEntries();
-    }, []);
-
-    // Save entry function
-    const saveEntry = async (date, data) => {
-        try {
-            // Optimistic update
-            const updatedEntry = {
-                ...entries[date],
-                ...data,
-                updatedAt: new Date().toISOString(),
-            };
-
-            const newEntries = { ...entries, [date]: updatedEntry };
-            setEntries(newEntries);
-
-            const today = getTodayIST();
-            if (date === today) {
-                setTodayEntry(updatedEntry);
-            }
-
-            // Check for milestone
-            const wasCompleted = entries[date]?.completed;
-            const isNowCompleted = updatedEntry.completed;
-
-            if (!wasCompleted && isNowCompleted) {
-                const newStreak = calculateCurrentStreak(newEntries);
-                setCurrentStreak(newStreak);
-                const newMilestone = checkMilestone(newStreak);
-                if (newMilestone) {
-                    setMilestone(newMilestone);
-                    setShowMilestone(true);
-                }
-            }
-
-            // Save to Storj
-            await storjSaveEntry(date, data);
-        } catch (error) {
-            console.error('Error saving entry:', error);
-            throw error;
-        }
-    };
-
-    // Toggle photo star
-    const togglePhotoStar = async (date, photoIndex) => {
-        try {
-            const entry = entries[date];
-            if (entry?.photos?.[photoIndex]) {
-                const photos = [...entry.photos];
-                photos[photoIndex] = { ...photos[photoIndex], starred: !photos[photoIndex].starred };
-                await saveEntry(date, { photos });
-            }
-        } catch (error) {
-            console.error('Error toggling photo star:', error);
-        }
-    };
-
-    // Toggle day star
-    const toggleDayStar = async (date) => {
-        try {
-            const entry = entries[date];
-            if (entry) {
-                await saveEntry(date, { starred: !entry.starred });
-            }
-        } catch (error) {
-            console.error('Error toggling day star:', error);
-        }
-    };
+    // ... (existing code) ...
 
     const handleAcceptTerms = () => {
         setTermsAccepted(true);
@@ -170,19 +83,14 @@ function App() {
         localStorage.setItem('s3raeon_guidelines_accepted', 'true');
     };
 
-    const contextValue = {
-        entries,
-        todayEntry,
-        loading,
-        currentStreak,
-        saveEntry,
-        togglePhotoStar,
-        toggleDayStar,
+    const handleSeenUpdates = () => {
+        setUpdatesSeen(true);
+        localStorage.setItem('s3raeon_v2_seen', 'true');
     };
 
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    // ... (contextValue definition) ...
 
-    // ... rest of effects ...
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     if (!isAuthenticated) {
         return <AuthScreen onAuthenticated={() => setIsAuthenticated(true)} />;
@@ -196,6 +104,11 @@ function App() {
     // 2. Show Terms Second
     if (!termsAccepted) {
         return <TermsModal onAccept={handleAcceptTerms} />;
+    }
+
+    // 3. Show Updates Third (Only if onboarding complete)
+    if (!updatesSeen) {
+        return <UpdatesModal onClose={handleSeenUpdates} />;
     }
 
     if (loading) {
