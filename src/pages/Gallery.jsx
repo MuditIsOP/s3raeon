@@ -24,9 +24,15 @@ function Gallery() {
                 });
             }
         });
-        const getSortKey = (p) => p.timestamp || p.date;
-        all.sort((a, b) => getSortKey(b).localeCompare(getSortKey(a)));
-        favs.sort((a, b) => getSortKey(b).localeCompare(getSortKey(a)));
+        const getTime = (p) => DateTime.fromISO(p.timestamp || p.date).toMillis();
+        const compare = (a, b) => {
+            const timeA = getTime(a);
+            const timeB = getTime(b);
+            if (timeA !== timeB) return timeB - timeA;
+            return b.index - a.index;
+        };
+        all.sort(compare);
+        favs.sort(compare);
         return { allPhotos: all, favorites: favs, monthlyPhotos: monthly };
     }, [entries]);
 
