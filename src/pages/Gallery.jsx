@@ -75,7 +75,7 @@ function Gallery() {
                                 <p style={{ color: 'var(--text-secondary)' }}>No favorites yet</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-3 gap-1">
                                 {favorites.map((photo) => <PhotoTile key={`${photo.date}-${photo.index}`} photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />)}
                             </div>
                         )}
@@ -93,7 +93,7 @@ function Gallery() {
                             Object.entries(monthlyPhotos).sort(([a], [b]) => b.localeCompare(a)).map(([monthKey, { label, photos }]) => (
                                 <div key={monthKey} className="mb-6">
                                     <p className="text-label mb-3">{label}</p>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-3 gap-1">
                                         {photos.map((photo) => <PhotoTile key={`${photo.date}-${photo.index}`} photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />)}
                                     </div>
                                 </div>
@@ -158,18 +158,47 @@ function PhotoModal({ photo, onClose, onStar }) {
 
                 <div className="mt-4 flex items-center gap-4">
                     <span style={{ color: 'var(--text-muted)' }}>{formatDate(photo.date)}</span>
-                    <button
-                        onClick={handleStarClick}
-                        className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                        style={{
-                            background: photo.starred ? '#FBBF24' : 'rgba(255,255,255,0.1)',
-                            color: photo.starred ? 'white' : 'var(--text-muted)'
-                        }}
-                    >
-                        <svg className="w-5 h-5" fill={photo.starred ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                        </svg>
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                    const response = await fetch(photo.url);
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `S3RAEON_${photo.date}_${photo.index}.jpg`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                } catch (error) {
+                                    console.error('Download failed:', error);
+                                }
+                            }}
+                            className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-[rgba(255,255,255,0.1)] text-[var(--text-muted)] hover:bg-[rgba(255,255,255,0.2)] hover:text-white"
+                            title="Download Photo"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                        </button>
+
+                        <button
+                            onClick={handleStarClick}
+                            className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+                            style={{
+                                background: photo.starred ? '#FBBF24' : 'rgba(255,255,255,0.1)',
+                                color: photo.starred ? 'white' : 'var(--text-muted)'
+                            }}
+                        >
+                            <svg className="w-5 h-5" fill={photo.starred ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </motion.div>
         </>

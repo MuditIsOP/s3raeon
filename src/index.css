@@ -331,8 +331,8 @@ body {
 }
 
 .photo-item {
-  width: 5rem;
-  height: 5rem;
+  width: 100%;
+  aspect-ratio: 1;
   border-radius: 0.75rem;
   overflow: hidden;
   position: relative;
