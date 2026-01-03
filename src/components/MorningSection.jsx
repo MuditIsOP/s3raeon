@@ -199,35 +199,27 @@ function MorningSection({ todayEntry, isUnlocked }) {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    const [showRetakeModal, setShowRetakeModal] = useState(false);
+    const [deleteInput, setDeleteInput] = useState('');
+
+    const confirmRetake = () => {
+        if (deleteInput.toLowerCase() === 'delete') {
+            setAudioUrl(null);
+            setIsPlaying(false);
+            setShowRetakeModal(false);
+            setDeleteInput('');
+        }
+    };
+
     return (
-        <section className="card">
+        <section className="card relative overflow-hidden">
             <div className="card-header">
                 <h2 className="card-title">Voice Affirmation</h2>
                 {audioUrl && <div className="completed-badge"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg></div>}
             </div>
 
             <AnimatePresence mode="wait">
-                {!isUnlocked ? (
-                    <motion.div key="locked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-4">
-                        <p className="text-sm italic mb-4 px-2" style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>"{affirmation}"</p>
-                        <div className="h-16 w-full rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-muted)] text-sm mb-4 opacity-50">
-                            Visualizer locked
-                        </div>
-                        <button disabled className="btn-secondary w-full opacity-75 cursor-not-allowed">
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                            Locked until 5:00 AM
-                        </button>
-                    </motion.div>
-                ) : tooShort ? (
-                    <motion.div key="too-short" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-4">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444' }}>
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        </div>
-                        <p className="font-medium mb-1" style={{ color: 'var(--text)' }}>Recording too short</p>
-                        <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Minimum 1 minute required ({formatTime(recordingTime)} recorded)</p>
-                        <button onClick={handleRetry} className="btn-primary">Try Again</button>
-                    </motion.div>
-                ) : audioUrl ? (
+                {audioUrl ? (
                     <motion.div key="playback" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <audio
                             ref={audioRef}
@@ -306,6 +298,44 @@ function MorningSection({ todayEntry, isUnlocked }) {
                                 <span className="absolute text-[8px] font-bold" style={{ marginTop: '1px' }}>10</span>
                             </motion.button>
                         </div>
+
+                        {/* Retake Option */}
+                        <div className="text-center mt-6">
+                            {isUnlocked ? (
+                                <button
+                                    onClick={() => setShowRetakeModal(true)}
+                                    className="text-xs text-[var(--text-muted)] hover:text-red-400 transition-colors flex items-center justify-center gap-1 mx-auto"
+                                >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    Retake Recording
+                                </button>
+                            ) : (
+                                <button disabled className="text-xs text-[var(--text-muted)] flex items-center justify-center gap-1 mx-auto opacity-50 cursor-not-allowed">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                    Voice Logged (Locked)
+                                </button>
+                            )}
+                        </div>
+                    </motion.div>
+                ) : !isUnlocked ? (
+                    <motion.div key="locked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-4">
+                        <p className="text-sm italic mb-4 px-2" style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>"{affirmation}"</p>
+                        <div className="h-16 w-full rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-muted)] text-sm mb-4 opacity-50">
+                            Visualizer locked
+                        </div>
+                        <button disabled className="btn-secondary w-full opacity-75 cursor-not-allowed">
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            Locked until 5:00 AM
+                        </button>
+                    </motion.div>
+                ) : tooShort ? (
+                    <motion.div key="too-short" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-4">
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444' }}>
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <p className="font-medium mb-1" style={{ color: 'var(--text)' }}>Recording too short</p>
+                        <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Minimum 1 minute required ({formatTime(recordingTime)} recorded)</p>
+                        <button onClick={handleRetry} className="btn-primary">Try Again</button>
                     </motion.div>
                 ) : (
                     <motion.div key="record" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-4">
@@ -353,6 +383,73 @@ function MorningSection({ todayEntry, isUnlocked }) {
                             {uploadingAudio ? 'Saving...' : isRecording ? 'Tap to stop' : 'Tap to record'}
                         </p>
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Retake Confirmation Sheet */}
+            <AnimatePresence>
+                {showRetakeModal && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="modal-backdrop z-40"
+                            onClick={() => setShowRetakeModal(false)}
+                        />
+                        <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            className="bottom-sheet"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="sheet-handle" />
+                            <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>Delete Recording?</h3>
+                            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+                                This will permanently delete your existing recording to let you start over.
+                            </p>
+
+                            <div className="mb-6">
+                                <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-secondary)' }}>
+                                    Type <span className="text-red-400 font-mono bg-red-500/10 px-1.5 py-0.5 rounded">delete</span> to confirm:
+                                </label>
+                                <input
+                                    type="text"
+                                    value={deleteInput}
+                                    onChange={(e) => setDeleteInput(e.target.value)}
+                                    className="input-field text-center font-mono tracking-wider"
+                                    placeholder="type delete"
+                                    autoFocus
+                                    autoComplete="off"
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowRetakeModal(false)}
+                                    className="flex-1 btn-secondary"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmRetake}
+                                    disabled={deleteInput.toLowerCase() !== 'delete'}
+                                    className="flex-1 py-3 rounded-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center gap-2"
+                                    style={{
+                                        background: deleteInput.toLowerCase() === 'delete'
+                                            ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)'
+                                            : 'var(--bg-elevated)',
+                                        color: deleteInput.toLowerCase() === 'delete' ? 'white' : 'var(--text-muted)'
+                                    }}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    Delete & Retake
+                                </button>
+                            </div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </section>

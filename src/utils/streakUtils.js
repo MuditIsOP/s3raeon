@@ -28,12 +28,15 @@ export const calculateCurrentStreak = (entries) => {
     const todayStr = today.toFormat('yyyy-MM-dd');
     const yesterdayStr = today.minus({ days: 1 }).toFormat('yyyy-MM-dd');
 
-    // Start from today if there's an entry, otherwise start from yesterday
-    if (!entries[todayStr]) {
-        if (!entries[yesterdayStr]) {
-            return 0;
-        }
+    // Start from today if there's a COMPLETED entry. 
+    // If today is incomplete/missing, start from yesterday if THAT is completed.
+    // Otherwise, streak is 0.
+    if (entries[todayStr] && entries[todayStr].completed) {
+        checkDate = today;
+    } else if (entries[yesterdayStr] && entries[yesterdayStr].completed) {
         checkDate = today.minus({ days: 1 });
+    } else {
+        return 0;
     }
 
     // Count consecutive days backwards

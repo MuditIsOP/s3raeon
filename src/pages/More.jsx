@@ -35,6 +35,7 @@ function More() {
         .map(([date, entry]) => ({
             date,
             excerpt: entry.journal,
+            affirmation: entry.affirmation,
             mood: entry.mood,
             hasAudio: !!entry.audioUrl
         }));
@@ -48,6 +49,7 @@ function More() {
         const lowerQuery = query.toLowerCase();
         const filtered = allEntries.filter(item =>
             item.excerpt?.toLowerCase().includes(lowerQuery) ||
+            item.affirmation?.toLowerCase().includes(lowerQuery) ||
             formatDate(item.date).toLowerCase().includes(lowerQuery)
         );
         setSearchResults(filtered);
@@ -145,10 +147,10 @@ function More() {
                                 <span className="text-sm font-semibold text-gradient">{formatDate(r.date)}</span>
                             </div>
                             <p className="text-sm line-clamp-2" style={{
-                                color: r.excerpt ? 'var(--text-secondary)' : 'var(--text-muted)',
-                                fontStyle: r.excerpt ? 'normal' : 'italic'
+                                color: (isVoiceMode ? r.affirmation : r.excerpt) ? 'var(--text-secondary)' : 'var(--text-muted)',
+                                fontStyle: (isVoiceMode ? r.affirmation : r.excerpt) ? 'normal' : 'italic'
                             }}>
-                                {r.excerpt || "Journal not written yet"}
+                                {isVoiceMode ? (r.affirmation || "Affirmation not recorded") : (r.excerpt || "Journal not written yet")}
                             </p>
                         </div>
                     ))}

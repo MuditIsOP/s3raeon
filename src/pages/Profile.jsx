@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { loadProfile, saveProfile, uploadProfilePhoto, getInitials } from '../profile';
+import { loadConfig, saveConfig } from '../storj'; // Import config functions
 import { DateTime } from 'luxon';
 import Header from '../components/Header';
 
@@ -22,6 +23,11 @@ function Profile() {
     const [message, setMessage] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
 
+    // Security State
+    const [securityConfig, setSecurityConfig] = useState(null);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [showSecurityModal, setShowSecurityModal] = useState(false);
+
     useEffect(() => {
         loadData();
     }, []);
@@ -29,10 +35,14 @@ function Profile() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const data = await loadProfile();
-            setProfile(data);
+            const [profileData, configData] = await Promise.all([
+                loadProfile(),
+                loadConfig()
+            ]);
+            setProfile(profileData);
+            setSecurityConfig(configData);
         } catch (error) {
-            console.error('Error loading profile:', error);
+            console.error('Error loading data:', error);
         } finally {
             setLoading(false);
         }
@@ -69,6 +79,11 @@ function Profile() {
         } finally {
             setUploadingPhoto(false);
         }
+    };
+
+    const refreshConfig = async () => {
+        const config = await loadConfig();
+        setSecurityConfig(config);
     };
 
     if (loading) return <div className="page flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -178,6 +193,38 @@ function Profile() {
                     </div>
                 </div>
 
+                {/* Security Section */}
+                <div className="card">
+                    <h3 className="card-title mb-4">Security</h3>
+                    <div className="space-y-3">
+                        <button
+                            onClick={() => setShowPasswordModal(true)}
+                            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg)] transition-colors text-left"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                </div>
+                                <span className="font-medium" style={{ color: 'var(--text)' }}>Change Password</span>
+                            </div>
+                            <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        </button>
+
+                        <button
+                            onClick={() => setShowSecurityModal(true)}
+                            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg)] transition-colors text-left"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </div>
+                                <span className="font-medium" style={{ color: 'var(--text)' }}>Change Security Question</span>
+                            </div>
+                            <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                    </div>
+                </div>
+
                 <div className="flex flex-col gap-3 mt-6">
                     <AnimatePresence>
                         {message && (
@@ -208,6 +255,30 @@ function Profile() {
                         initialDate={profile.dob}
                         onSelect={(date) => { setProfile({ ...profile, dob: date }); setShowDatePicker(false); }}
                         onClose={() => setShowDatePicker(false)}
+                    />
+                )}
+                {showPasswordModal && (
+                    <ChangePasswordModal
+                        config={securityConfig}
+                        onClose={() => setShowPasswordModal(false)}
+                        onSuccess={() => {
+                            refreshConfig();
+                            setShowPasswordModal(false);
+                            setMessage({ type: 'success', text: 'Password changed successfully' });
+                            setTimeout(() => setMessage(null), 3000);
+                        }}
+                    />
+                )}
+                {showSecurityModal && (
+                    <ChangeSecurityModal
+                        config={securityConfig}
+                        onClose={() => setShowSecurityModal(false)}
+                        onSuccess={() => {
+                            refreshConfig();
+                            setShowSecurityModal(false);
+                            setMessage({ type: 'success', text: 'Security question updated' });
+                            setTimeout(() => setMessage(null), 3000);
+                        }}
                     />
                 )}
             </AnimatePresence>
@@ -297,6 +368,194 @@ function DatePickerModal({ initialDate, onSelect, onClose }) {
                 <button onClick={onClose} className="w-full mt-6 py-3 rounded-xl bg-[var(--bg-elevated)] text-[var(--text)] font-semibold">
                     Cancel
                 </button>
+            </motion.div>
+        </>
+    );
+}
+
+function ChangePasswordModal({ config, onClose, onSuccess }) {
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    const handleSubmit = async () => {
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            setError('All fields are required'); return;
+        }
+        if (currentPassword !== config.password) {
+            setError('Incorrect current password'); return;
+        }
+        if (newPassword.length < 4) {
+            setError('New password too short (min 4 chars)'); return;
+        }
+        if (newPassword !== confirmPassword) {
+            setError('New passwords do not match'); return;
+        }
+
+        setSaving(true);
+        try {
+            const newConfig = { ...config, password: newPassword };
+            await saveConfig(newConfig);
+            onSuccess();
+        } catch (err) {
+            setError('Failed to save');
+            setSaving(false);
+        }
+    };
+
+    return (
+        <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-backdrop" onClick={onClose} />
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} className="bottom-sheet">
+                <div className="sheet-handle" />
+                <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--text)' }}>Change Password</h3>
+
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-label mb-1 block">Current Password</label>
+                        <input
+                            type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className="input-field w-full"
+                            placeholder="Enter current password"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-label mb-1 block">
+                            New Password <span className="text-xs font-normal" style={{ color: 'var(--text-muted)' }}>(at least 4 chars)</span>
+                        </label>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="input-field w-full"
+                            placeholder="Enter new password"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-label mb-1 block">Retype Password</label>
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="input-field w-full"
+                            placeholder="Re-enter new password"
+                        />
+                    </div>
+                </div>
+
+                {error && <p className="text-red-400 text-xs mt-3 text-center">{error}</p>}
+
+                <div className="flex gap-3 mt-6">
+                    <button onClick={onClose} className="flex-1 btn-secondary">Cancel</button>
+                    <button onClick={handleSubmit} disabled={saving} className="flex-1 btn-primary">
+                        {saving ? 'Saving...' : 'Update'}
+                    </button>
+                </div>
+            </motion.div>
+        </>
+    );
+}
+
+function ChangeSecurityModal({ config, onClose, onSuccess }) {
+    const [currentAnswer, setCurrentAnswer] = useState('');
+    const [newQuestion, setNewQuestion] = useState('');
+    const [newAnswer, setNewAnswer] = useState('');
+    const [isVerified, setIsVerified] = useState(false);
+    const [error, setError] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    const handleVerify = () => {
+        if (currentAnswer.toLowerCase().trim() === config.securityAnswer.toLowerCase().trim()) {
+            setIsVerified(true);
+            setError('');
+        } else {
+            setError('Incorrect answer');
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!newQuestion || !newAnswer) {
+            setError('Both fields required'); return;
+        }
+
+        setSaving(true);
+        try {
+            const newConfig = { ...config, securityQuestion: newQuestion, securityAnswer: newAnswer };
+            await saveConfig(newConfig);
+            onSuccess();
+        } catch (err) {
+            setError('Failed to save');
+            setSaving(false);
+        }
+    };
+
+    return (
+        <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-backdrop" onClick={onClose} />
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} className="bottom-sheet">
+                <div className="sheet-handle" />
+                <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--text)' }}>Change Security Question</h3>
+
+                {!isVerified ? (
+                    <div className="space-y-4">
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                            To make changes, please answer your current security question:
+                        </p>
+                        <div className="p-3 rounded-lg bg-[var(--bg-elevated)] text-sm font-medium" style={{ color: 'var(--text)' }}>
+                            {config?.securityQuestion}
+                        </div>
+                        <input
+                            type="text"
+                            value={currentAnswer}
+                            onChange={(e) => setCurrentAnswer(e.target.value)}
+                            className="input-field w-full"
+                            placeholder="Your Answer"
+                            autoFocus
+                        />
+                        {error && <p className="text-red-400 text-xs mt-2 text-center">{error}</p>}
+
+                        <div className="flex gap-3 mt-4">
+                            <button onClick={onClose} className="flex-1 btn-secondary">Cancel</button>
+                            <button onClick={handleVerify} className="flex-1 btn-primary">Verify</button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        <p className="text-sm font-medium text-green-500 mb-2">✓ Verified. Set new question:</p>
+                        <div>
+                            <label className="text-label mb-1 block">New Question</label>
+                            <input
+                                type="text"
+                                value={newQuestion}
+                                onChange={(e) => setNewQuestion(e.target.value)}
+                                className="input-field w-full"
+                                placeholder="e.g. Favorite color?"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-label mb-1 block">New Answer</label>
+                            <input
+                                type="text"
+                                value={newAnswer}
+                                onChange={(e) => setNewAnswer(e.target.value)}
+                                className="input-field w-full"
+                                placeholder="Answer"
+                            />
+                        </div>
+                        {error && <p className="text-red-400 text-xs mt-2 text-center">{error}</p>}
+
+                        <div className="flex gap-3 mt-6">
+                            <button onClick={onClose} className="flex-1 btn-secondary">Cancel</button>
+                            <button onClick={handleSubmit} disabled={saving} className="flex-1 btn-primary">
+                                {saving ? 'Saving...' : 'Update'}
+                            </button>
+                        </div>
+                    </div>
+                )}
             </motion.div>
         </>
     );

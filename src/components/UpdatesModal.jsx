@@ -3,6 +3,27 @@ import { motion } from 'framer-motion';
 function UpdatesModal({ onClose }) {
     const updates = [
         {
+            title: "Security Suite",
+            desc: "Added Password Change & Security Question options in Profile.",
+            icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
+            color: "text-red-400",
+            bg: "bg-red-500/10"
+        },
+        {
+            title: "Voice Logic 2.0",
+            desc: "Voice player stays visible even when locked. Retake protection added.",
+            icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>,
+            color: "text-indigo-400",
+            bg: "bg-indigo-500/10"
+        },
+        {
+            title: "Visual Polish",
+            desc: "Affirmations & Prompts now appear in full detail views.",
+            icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>,
+            color: "text-pink-400",
+            bg: "bg-pink-500/10"
+        },
+        {
             title: "Magic Updates",
             desc: "The app now updates itself! New features appear automatically.",
             icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,

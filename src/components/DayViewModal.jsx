@@ -131,6 +131,19 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                         </div>
                     )}
 
+                    {/* Affirmation - Show ONLY in Voice Mode */}
+                    {mode === 'voice' && entry.affirmation && (
+                        <div className="space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider opacity-50 flex items-center gap-2">
+                                <span className="w-1 h-1 rounded-full bg-current"></span>
+                                Daily Affirmation
+                            </h3>
+                            <p className="text-xl font-serif italic text-center px-4 py-8" style={{ color: 'var(--text)' }}>
+                                "{entry.affirmation}"
+                            </p>
+                        </div>
+                    )}
+
                     {/* Journal - Hide in Voice Mode */}
                     {mode !== 'voice' && entry.journal && (
                         <div className="space-y-3">
@@ -138,6 +151,14 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                                 <span className="w-1 h-1 rounded-full bg-current"></span>
                                 Journal Entry
                             </h3>
+
+                            {/* Prompt Display */}
+                            {entry.prompt && (
+                                <p className="text-sm font-medium italic mb-2" style={{ color: 'var(--text-muted)' }}>
+                                    {entry.prompt}
+                                </p>
+                            )}
+
                             <p className="text-base leading-relaxed whitespace-pre-wrap font-light" style={{ color: 'var(--text-secondary)' }}>
                                 {entry.journal}
                             </p>
