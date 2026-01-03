@@ -24,8 +24,8 @@ function Gallery() {
                 });
             }
         });
-        all.sort((a, b) => new Date(b.date) - new Date(a.date));
-        favs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        all.sort((a, b) => b.date.localeCompare(a.date) || b.index - a.index);
+        favs.sort((a, b) => b.date.localeCompare(a.date) || b.index - a.index);
         return { allPhotos: all, favorites: favs, monthlyPhotos: monthly };
     }, [entries]);
 
