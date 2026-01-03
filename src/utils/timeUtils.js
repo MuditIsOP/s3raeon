@@ -5,9 +5,12 @@ const IST_ZONE = 'Asia/Kolkata';
 
 /**
  * Get current time in IST
+ * TEMPORARY: Hardcoded to Jan 3, 2026 11:55 PM for data recovery
+ * TODO: Remove this and uncomment the line below to restore live time
  */
 export const getCurrentIST = () => {
-    return DateTime.now().setZone(IST_ZONE);
+    // return DateTime.now().setZone(IST_ZONE); // UNCOMMENT THIS FOR LIVE TIME
+    return DateTime.fromObject({ year: 2026, month: 1, day: 3, hour: 23, minute: 55 }, { zone: IST_ZONE });
 };
 
 /**
