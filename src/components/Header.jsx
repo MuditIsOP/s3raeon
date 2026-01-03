@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDiary } from '../App';
-import { getCachedProfile, loadProfile, getInitials } from '../profile';
+import { loadProfile, getInitials } from '../profile';
 
 function Header({ title, showStreak = false, showProfile = true, onClose }) {
     const { currentStreak } = useDiary();
     const navigate = useNavigate();
-    const [profile, setProfile] = useState(getCachedProfile());
+    const [profile, setProfile] = useState({ firstName: 'Arshita' });
 
     useEffect(() => {
         loadProfile().then(setProfile);
