@@ -24,15 +24,17 @@ function Gallery() {
                 });
             }
         });
+
+        // Sort function: Newest first by timestamp
         const getTime = (p) => DateTime.fromISO(p.timestamp || p.date).toMillis();
-        const compare = (a, b) => {
-            const timeA = getTime(a);
-            const timeB = getTime(b);
-            if (timeA !== timeB) return timeB - timeA;
-            return b.index - a.index;
-        };
+        const compare = (a, b) => getTime(b) - getTime(a);
+
         all.sort(compare);
         favs.sort(compare);
+
+        // Also sort photos within each month group
+        Object.values(monthly).forEach(m => m.photos.sort(compare));
+
         return { allPhotos: all, favorites: favs, monthlyPhotos: monthly };
     }, [entries]);
 
