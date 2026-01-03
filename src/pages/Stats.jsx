@@ -89,36 +89,47 @@ function Stats() {
                         <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-[var(--bg-elevated)]"></div><span className="text-xs text-[var(--text-muted)]">None</span></div>
                     </div>
                 </div>
+                <div className="grid grid-cols-7 gap-1.5 mb-2">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                        <div key={i} className="text-[10px] text-center font-bold opacity-40" style={{ color: 'var(--text)' }}>{d}</div>
+                    ))}
+                </div>
                 <div className="grid grid-cols-7 gap-1.5">
+                    {/* Padding for start alignment */}
+                    {heatMapData.length > 0 && Array.from({ length: (heatMapData[0].day === 7 ? 0 : heatMapData[0].day) }).map((_, i) => (
+                        <div key={`pad-${i}`} />
+                    ))}
                     {heatMapData.map((day) => (
                         <div key={day.date} className="aspect-square rounded-md transition-all hover:scale-110" style={{ backgroundColor: day.hasEntry && day.mood ? MOOD_CONFIG.find((m) => m.value === day.mood)?.color : day.hasEntry ? 'var(--primary)' : 'var(--bg-elevated)' }} title={day.date} />
                     ))}
                 </div>
             </div>
 
-            {moodData.length > 0 && (
-                <div className="card">
-                    <h3 className="card-title mb-4">Mood Breakdown</h3>
-                    <div className="flex items-center justify-center" style={{ height: '160px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={moodData} dataKey="count" cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={4}>
-                                    {moodData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="var(--card-bg)" strokeWidth={2} />)}
-                                </Pie>
-                            </PieChart>
-                        </ResponsiveContainer>
+            {
+                moodData.length > 0 && (
+                    <div className="card">
+                        <h3 className="card-title mb-4">Mood Breakdown</h3>
+                        <div className="flex items-center justify-center" style={{ height: '160px' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={moodData} dataKey="count" cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={4}>
+                                        {moodData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="var(--card-bg)" strokeWidth={2} />)}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-4 mt-4">
+                            {moodData.map((m) => (
+                                <div key={m.value} className="flex items-center gap-1.5 bg-[var(--bg-elevated)] px-2 py-1 rounded-lg">
+                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: m.color }} />
+                                    <span className="text-xs font-medium" style={{ color: 'var(--text)' }}>{m.label} ({m.count})</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex flex-wrap justify-center gap-4 mt-4">
-                        {moodData.map((m) => (
-                            <div key={m.value} className="flex items-center gap-1.5 bg-[var(--bg-elevated)] px-2 py-1 rounded-lg">
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: m.color }} />
-                                <span className="text-xs font-medium" style={{ color: 'var(--text)' }}>{m.label} ({m.count})</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </motion.div>
+                )
+            }
+        </motion.div >
     );
 }
 
