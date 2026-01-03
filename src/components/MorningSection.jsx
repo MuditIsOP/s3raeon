@@ -232,7 +232,7 @@ function MorningSection({ todayEntry, isUnlocked }) {
 
                         {/* Visualizer for Playback */}
                         <div className="mb-4">
-                            <AudioVisualizer audioRef={audioRef} isRecording={false} />
+                            <AudioVisualizer audioRef={audioRef} audioUrl={audioUrl} isRecording={false} isPlaying={isPlaying} />
                         </div>
 
                         {/* Progress bar */}
