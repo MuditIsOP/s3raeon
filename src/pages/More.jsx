@@ -7,6 +7,8 @@ import Header from '../components/Header';
 import TermsModal from '../components/TermsModal';
 import GuidelinesModal from '../components/GuidelinesModal';
 import DayViewModal from '../components/DayViewModal';
+import ExportModal from '../components/ExportModal';
+import AboutModal from '../components/AboutModal';
 
 const MENU_ICONS = {
     calendar: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
@@ -15,6 +17,7 @@ const MENU_ICONS = {
     terms: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
     guidelines: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
     voice: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>,
+    about: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
 };
 
 function More() {
@@ -26,6 +29,8 @@ function More() {
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [showGuidelines, setShowGuidelines] = useState(false);
+    const [showExport, setShowExport] = useState(false);
+    const [showAbout, setShowAbout] = useState(false);
 
     const [selectedVoiceDate, setSelectedVoiceDate] = useState(null);
 
@@ -69,14 +74,6 @@ function More() {
         setSearchResults(voiceEntries);
     };
 
-    const handleExport = () => {
-        const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 's3raeon-backup.json'; a.click();
-        URL.revokeObjectURL(url);
-    };
-
     const handleEnableNotifications = async () => {
         try {
             const { requestForToken } = await import('../firebase');
@@ -100,7 +97,8 @@ function More() {
         { title: 'Notifications', desc: 'Enable reminders', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>, action: handleEnableNotifications },
         { title: 'Usage Guidelines', desc: 'How to use S3RΛEON', icon: MENU_ICONS.guidelines, action: () => setShowGuidelines(true) },
         { title: 'Terms & Conditions', desc: 'View agreed terms', icon: MENU_ICONS.terms, action: () => setShowTerms(true) },
-        { title: 'Export', desc: 'Backup data', icon: MENU_ICONS.export, action: handleExport },
+        { title: 'Export Data', desc: 'Backup to JSON, TXT, or CSV', icon: MENU_ICONS.export, action: () => setShowExport(true) },
+        { title: 'About S3RΛEON', desc: 'A message for you', icon: MENU_ICONS.about, action: () => setShowAbout(true) },
     ];
 
     const handleResultClick = (date) => {
@@ -191,6 +189,8 @@ function More() {
             <AnimatePresence>
                 {showTerms && <TermsModal onClose={() => setShowTerms(false)} readOnly={true} />}
                 {showGuidelines && <GuidelinesModal onClose={() => setShowGuidelines(false)} readOnly={true} />}
+                {showExport && <ExportModal onClose={() => setShowExport(false)} entries={entries} />}
+                {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
                 {selectedVoiceDate && (
                     <DayViewModal
                         date={selectedVoiceDate}
