@@ -38,17 +38,35 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Skip waiting - immediately activate new service worker
+        skipWaiting: true,
+        clientsClaim: true,
+        // Don't cache HTML - always fetch from network
+        globPatterns: ['**/*.{js,css,ico,png,svg,woff2}'],
+        // Navigation requests always go to network
+        navigateFallback: null,
         runtimeCaching: [
+          {
+            // App shell - always check network first
+            urlPattern: /\.(js|css)$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'app-shell',
+              networkTimeoutSeconds: 2,
+              expiration: {
+                maxAgeSeconds: 60 * 60 // 1 hour max
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/gateway\.storjshare\.io\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'storj-data-cache',
-              networkTimeoutSeconds: 3, // Fallback to cache if network is slow
+              networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 1 day cache for freshness
+                maxAgeSeconds: 60 * 60 // 1 hour cache
               },
               cacheableResponse: {
                 statuses: [0, 200]
