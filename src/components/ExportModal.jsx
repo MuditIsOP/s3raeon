@@ -24,14 +24,8 @@ const EXPORT_OPTIONS = [
 ];
 
 function ExportModal({ onClose, entries }) {
-    const backdropRef = useRef(null);
 
-    const handleBackdropClick = (e) => {
-        if (backdropRef.current === e.target) {
-            onClose();
-        }
-    };
-
+    // ... (logic remains same)
     const generateExport = (type) => {
         const timestamp = new Date().toISOString().split('T')[0];
         let content = '';
@@ -95,23 +89,26 @@ function ExportModal({ onClose, entries }) {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            ref={backdropRef}
-            onClick={handleBackdropClick}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-        >
+        <>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+                className="modal-backdrop"
+            />
+
             <motion.div
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
-                className="w-full max-w-sm bg-[var(--card-bg)] rounded-3xl overflow-hidden border border-[var(--border)] shadow-2xl"
+                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                className="bottom-sheet"
+                onClick={e => e.stopPropagation()}
             >
-                <div className="p-6">
-                    <div className="w-12 h-1 bg-[var(--border)] rounded-full mx-auto mb-6" />
+                <div className="sheet-handle" />
 
+                <div className="pb-8">
                     <h3 className="text-xl font-bold text-center mb-2 text-gradient">Export Data</h3>
                     <p className="text-sm text-center mb-8" style={{ color: 'var(--text-muted)' }}>
                         Choose a format to save your journal entries.
@@ -144,7 +141,7 @@ function ExportModal({ onClose, entries }) {
                     </button>
                 </div>
             </motion.div>
-        </motion.div>
+        </>
     );
 }
 
