@@ -107,18 +107,32 @@ function App() {
     }, []);
 
     const saveEntry = async (date, entry) => {
-        const newEntries = { ...entries, [date]: entry };
-        setEntries(newEntries);
-        setTodayEntry(entry);
-        await storjSaveEntry(date, entry);
+        const previousEntries = { ...entries };
+        const previousTodayEntry = todayEntry;
 
-        // Check for milestones after saving
-        const streak = calculateCurrentStreak(newEntries);
-        setCurrentStreak(streak);
-        const newMilestone = checkMilestone(streak);
-        if (newMilestone) {
-            setMilestone(newMilestone);
-            setShowMilestone(true);
+        try {
+            // Save to server FIRST - don't show success until confirmed
+            await storjSaveEntry(date, entry);
+
+            // Only update UI after server confirms success
+            const newEntries = { ...entries, [date]: { ...entries[date], ...entry, updatedAt: new Date().toISOString() } };
+            setEntries(newEntries);
+            setTodayEntry(newEntries[date]);
+
+            // Check for milestones after saving
+            const streak = calculateCurrentStreak(newEntries);
+            setCurrentStreak(streak);
+            const newMilestone = checkMilestone(streak);
+            if (newMilestone) {
+                setMilestone(newMilestone);
+                setShowMilestone(true);
+            }
+        } catch (error) {
+            console.error('Failed to save entry:', error);
+            // Revert UI on failure
+            setEntries(previousEntries);
+            setTodayEntry(previousTodayEntry);
+            throw error; // Re-throw so the caller knows it failed
         }
     };
 

@@ -24,32 +24,24 @@ const DEFAULT_PROFILE = {
     profilePhotoUrl: null,
 };
 
-// Load profile from Storj
+// Load profile from Storj (no caching)
 export const loadProfile = async () => {
     try {
         const command = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: 'profile/profile.json' });
         const response = await s3Client.send(command);
         const body = await response.Body.transformToString();
         const profile = JSON.parse(body);
-
-        // Cache in localStorage for quick access
-        localStorage.setItem('s3raeon_profile', JSON.stringify(profile));
         return profile;
     } catch (error) {
         if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
-            // No profile exists, return default
             return DEFAULT_PROFILE;
         }
-        // Try to get from localStorage cache
-        const cached = localStorage.getItem('s3raeon_profile');
-        if (cached) {
-            try { return JSON.parse(cached); } catch { }
-        }
+        console.error('Error loading profile:', error);
         return DEFAULT_PROFILE;
     }
 };
 
-// Save profile to Storj
+// Save profile to Storj (no caching)
 export const saveProfile = async (profileData) => {
     const command = new PutObjectCommand({
         Bucket: BUCKET_NAME,
@@ -58,9 +50,6 @@ export const saveProfile = async (profileData) => {
         ContentType: 'application/json',
     });
     await s3Client.send(command);
-
-    // Update localStorage cache
-    localStorage.setItem('s3raeon_profile', JSON.stringify(profileData));
     return profileData;
 };
 
@@ -82,15 +71,6 @@ export const uploadProfilePhoto = async (file) => {
     const getCommand = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key });
     const url = await getSignedUrl(s3Client, getCommand, { expiresIn: 60 * 60 * 24 * 7 });
     return url;
-};
-
-// Get cached profile from localStorage (fast)
-export const getCachedProfile = () => {
-    const cached = localStorage.getItem('s3raeon_profile');
-    if (cached) {
-        try { return JSON.parse(cached); } catch { }
-    }
-    return DEFAULT_PROFILE;
 };
 
 // Get first letter for avatar
