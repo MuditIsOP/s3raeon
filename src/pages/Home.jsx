@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useDiary } from '../App';
 import { getTodayIST, formatDate, getCurrentMonthYear, getDaysInMonth, isMorningTime, isEveningTime } from '../utils/timeUtils';
-import { getCachedProfile, loadProfile } from '../profile';
+import { loadProfile } from '../profile';
 import { DateTime } from 'luxon';
 import Header from '../components/Header';
 import MorningSection from '../components/MorningSection';
@@ -14,7 +14,7 @@ function Home() {
     const { todayEntry, entries } = useDiary();
     const today = getTodayIST();
     const currentMonth = getCurrentMonthYear();
-    const [profile, setProfile] = useState(getCachedProfile());
+    const [profile, setProfile] = useState({ firstName: 'Arshita' });
 
     useEffect(() => {
         loadProfile().then(setProfile);
