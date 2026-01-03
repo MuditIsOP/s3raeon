@@ -24,8 +24,9 @@ function Gallery() {
                 });
             }
         });
-        all.sort((a, b) => b.date.localeCompare(a.date) || b.index - a.index);
-        favs.sort((a, b) => b.date.localeCompare(a.date) || b.index - a.index);
+        const getSortKey = (p) => p.timestamp || p.date;
+        all.sort((a, b) => getSortKey(b).localeCompare(getSortKey(a)));
+        favs.sort((a, b) => getSortKey(b).localeCompare(getSortKey(a)));
         return { allPhotos: all, favorites: favs, monthlyPhotos: monthly };
     }, [entries]);
 
