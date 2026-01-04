@@ -64,8 +64,21 @@ function Profile() {
         if (!hasChanges) return;
         setSaving(true);
         try {
+            // Save to server
             await saveProfile(profile);
-            setOriginalProfile({ ...profile }); // Update original after save
+
+            // Verify save succeeded by reloading from server
+            const serverProfile = await loadProfile();
+            if (serverProfile.firstName !== profile.firstName ||
+                serverProfile.lastName !== profile.lastName ||
+                serverProfile.email !== profile.email ||
+                serverProfile.mobile !== profile.mobile ||
+                serverProfile.dob !== profile.dob) {
+                throw new Error('Server profile does not match - save may have failed');
+            }
+
+            // Only show success after server confirms
+            setOriginalProfile({ ...profile });
             setMessage({ type: 'success', text: 'Profile updated' });
             setTimeout(() => {
                 setMessage(null);
