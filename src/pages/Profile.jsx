@@ -29,13 +29,14 @@ function Profile() {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [showSecurityModal, setShowSecurityModal] = useState(false);
 
-    // Check if there are unsaved changes
+    // Check if there are unsaved changes (normalize undefined to empty string)
+    const normalize = (val) => val || '';
     const hasChanges = originalProfile && (
-        profile.firstName !== originalProfile.firstName ||
-        profile.lastName !== originalProfile.lastName ||
-        profile.email !== originalProfile.email ||
-        profile.mobile !== originalProfile.mobile ||
-        profile.dob !== originalProfile.dob
+        normalize(profile.firstName) !== normalize(originalProfile.firstName) ||
+        normalize(profile.lastName) !== normalize(originalProfile.lastName) ||
+        normalize(profile.email) !== normalize(originalProfile.email) ||
+        normalize(profile.mobile) !== normalize(originalProfile.mobile) ||
+        normalize(profile.dob) !== normalize(originalProfile.dob)
     );
 
     useEffect(() => {
@@ -50,7 +51,7 @@ function Profile() {
                 loadConfig()
             ]);
             setProfile(profileData);
-            setOriginalProfile(profileData); // Store original for comparison
+            setOriginalProfile({ ...profileData }); // Clone for comparison
             setSecurityConfig(configData);
         } catch (error) {
             console.error('Error loading data:', error);
@@ -64,14 +65,16 @@ function Profile() {
         setSaving(true);
         try {
             await saveProfile(profile);
-            setOriginalProfile(profile); // Update original after save
+            setOriginalProfile({ ...profile }); // Update original after save
             setMessage({ type: 'success', text: 'Profile updated' });
             setTimeout(() => {
                 setMessage(null);
                 navigate(-1); // Go back to previous page
             }, 1000);
         } catch (error) {
+            console.error('Save error:', error);
             setMessage({ type: 'error', text: 'Failed to save' });
+        } finally {
             setSaving(false);
         }
     };
