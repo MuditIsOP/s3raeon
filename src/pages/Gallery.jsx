@@ -5,15 +5,27 @@ import { formatDate, getDayOfMonth } from '../utils/timeUtils';
 import { DateTime } from 'luxon';
 import Header from '../components/Header';
 
+const MOOD_CONFIG = [
+    { value: 1, label: 'Great', color: '#22c55e' },
+    { value: 2, label: 'Good', color: '#84cc16' },
+    { value: 3, label: 'Okay', color: '#eab308' },
+    { value: 4, label: 'Low', color: '#f97316' },
+    { value: 5, label: 'Hard', color: '#ef4444' },
+];
+
 function Gallery() {
     const { entries, togglePhotoStar } = useDiary();
     const [selectedPhoto, setSelectedPhoto] = useState(null);
     const [activeTab, setActiveTab] = useState('all');
+    const [moodFilter, setMoodFilter] = useState(null);
 
     const { allPhotos, favorites, monthlyPhotos } = useMemo(() => {
         const all = [], favs = [], monthly = {};
         Object.entries(entries).forEach(([date, entry]) => {
             if (entry.photos) {
+                // Filter by mood if active
+                if (moodFilter && entry.mood !== moodFilter) return;
+
                 entry.photos.forEach((photo, index) => {
                     const photoData = { ...photo, date, index, dayOfMonth: getDayOfMonth(date), mood: entry.mood, journal: entry.journal };
                     all.push(photoData);
@@ -36,7 +48,7 @@ function Gallery() {
         Object.values(monthly).forEach(m => m.photos.sort(compare));
 
         return { allPhotos: all, favorites: favs, monthlyPhotos: monthly };
-    }, [entries]);
+    }, [entries, moodFilter]);
 
     const handleStar = async (photo) => {
         await togglePhotoStar(photo.date, photo.index);
@@ -55,6 +67,25 @@ function Gallery() {
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="page">
             <Header title="Gallery" />
+
+            {/* Mood Filter Bar */}
+            <div className="flex items-center justify-between mb-4 overflow-x-auto pb-2 gap-2 no-scrollbar">
+                {MOOD_CONFIG.map((m) => (
+                    <button
+                        key={m.value}
+                        onClick={() => setMoodFilter(moodFilter === m.value ? null : m.value)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${moodFilter === m.value ? 'ring-2 ring-offset-2 ring-offset-[#000]' : 'opacity-70 hover:opacity-100'}`}
+                        style={{
+                            backgroundColor: moodFilter === m.value ? m.color : 'var(--bg-elevated)',
+                            color: moodFilter === m.value ? '#fff' : 'var(--text)',
+                            borderColor: m.color
+                        }}
+                    >
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: moodFilter === m.value ? '#fff' : m.color }} />
+                        {m.label}
+                    </button>
+                ))}
+            </div>
 
             <div className="flex gap-2 mb-6">
                 {['all', 'favorites'].map((tab) => (

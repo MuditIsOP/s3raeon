@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDiary } from '../App';
@@ -20,6 +20,15 @@ const MENU_ICONS = {
     about: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
 };
 
+
+const MOOD_CONFIG = [
+    { value: 1, label: 'Great', color: '#22c55e' },
+    { value: 2, label: 'Good', color: '#84cc16' },
+    { value: 3, label: 'Okay', color: '#eab308' },
+    { value: 4, label: 'Low', color: '#f97316' },
+    { value: 5, label: 'Hard', color: '#ef4444' },
+];
+
 function More() {
     const { entries } = useDiary();
     const navigate = useNavigate();
@@ -27,6 +36,7 @@ function More() {
     const [searchResults, setSearchResults] = useState([]);
     const [showSearch, setShowSearch] = useState(false);
     const [isVoiceMode, setIsVoiceMode] = useState(false);
+    const [moodFilter, setMoodFilter] = useState(null); // New state
     const [showTerms, setShowTerms] = useState(false);
     const [showGuidelines, setShowGuidelines] = useState(false);
     const [showExport, setShowExport] = useState(false);
@@ -35,7 +45,7 @@ function More() {
     const [selectedVoiceDate, setSelectedVoiceDate] = useState(null);
 
     // Load all entries sorted by date (descending) when search opens
-    const allEntries = Object.entries(entries)
+    const allEntries = useMemo(() => Object.entries(entries)
         .sort((a, b) => new Date(b[0]) - new Date(a[0]))
         .map(([date, entry]) => ({
             date,
@@ -43,35 +53,61 @@ function More() {
             affirmation: entry.affirmation,
             mood: entry.mood,
             hasAudio: !!entry.audioUrl
-        }));
+        })), [entries]);
+
+    const performSearch = (query, mood, voiceMode) => {
+        let filtered = allEntries;
+
+        // 1. Filter by Voice Mode
+        if (voiceMode) {
+            filtered = filtered.filter(e => e.hasAudio);
+        }
+
+        // 2. Filter by Mood
+        if (mood) {
+            filtered = filtered.filter(e => e.mood === mood);
+        }
+
+        // 3. Filter by Query
+        if (query.trim()) {
+            const lowerQuery = query.toLowerCase();
+            filtered = filtered.filter(item =>
+                item.excerpt?.toLowerCase().includes(lowerQuery) ||
+                item.affirmation?.toLowerCase().includes(lowerQuery) ||
+                formatDate(item.date).toLowerCase().includes(lowerQuery)
+            );
+        }
+
+        setSearchResults(filtered);
+    };
 
     const handleSearch = (query) => {
         setSearchQuery(query);
-        if (!query.trim()) {
-            setSearchResults(allEntries);
-            return;
-        }
-        const lowerQuery = query.toLowerCase();
-        const filtered = allEntries.filter(item =>
-            item.excerpt?.toLowerCase().includes(lowerQuery) ||
-            item.affirmation?.toLowerCase().includes(lowerQuery) ||
-            formatDate(item.date).toLowerCase().includes(lowerQuery)
-        );
-        setSearchResults(filtered);
+        performSearch(query, moodFilter, isVoiceMode);
+    };
+
+    const handleMoodSelect = (mood) => {
+        const newMood = mood === moodFilter ? null : mood;
+        setMoodFilter(newMood);
+        performSearch(searchQuery, newMood, isVoiceMode);
     };
 
     // Initialize search results when opening search
     const openSearch = () => {
         setIsVoiceMode(false);
         setShowSearch(true);
+        setSearchQuery('');
+        setMoodFilter(null);
         setSearchResults(allEntries);
     };
 
     const openVoiceJourney = () => {
         setIsVoiceMode(true);
         setShowSearch(true);
-        const voiceEntries = allEntries.filter(e => e.hasAudio);
-        setSearchResults(voiceEntries);
+        setSearchQuery('');
+        setMoodFilter(null);
+        // Initial filter for voice
+        performSearch('', null, true);
     };
 
     const handleEnableNotifications = async () => {
@@ -130,6 +166,26 @@ function More() {
                             <input type="text" value={searchQuery} onChange={(e) => handleSearch(e.target.value)} placeholder="Search..." className="input-field flex-1" autoFocus />
                         )}
                     </div>
+
+                    {/* Mood Filter Bar */}
+                    <div className="flex items-center justify-between mb-4 overflow-x-auto pb-2 gap-2 no-scrollbar">
+                        {MOOD_CONFIG.map((m) => (
+                            <button
+                                key={m.value}
+                                onClick={() => handleMoodSelect(m.value)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${moodFilter === m.value ? 'ring-2 ring-offset-2 ring-offset-[#000]' : 'opacity-70 hover:opacity-100'}`}
+                                style={{
+                                    backgroundColor: moodFilter === m.value ? m.color : 'var(--bg-elevated)',
+                                    color: moodFilter === m.value ? '#fff' : 'var(--text)',
+                                    borderColor: m.color
+                                }}
+                            >
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: moodFilter === m.value ? '#fff' : m.color }} />
+                                {m.label}
+                            </button>
+                        ))}
+                    </div>
+
                     {searchResults.length === 0 && !isVoiceMode && searchQuery.length >= 2 && <p className="text-center py-8" style={{ color: 'var(--text-muted)' }}>No results</p>}
                     {searchResults.length === 0 && isVoiceMode && (
                         <div className="text-center py-12">
