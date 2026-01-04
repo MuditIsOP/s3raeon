@@ -69,7 +69,7 @@ function Gallery() {
             <Header title="Gallery" />
 
             {/* Mood Filter Bar */}
-            <div className="flex items-center mb-6 overflow-x-auto pb-2 gap-3 no-scrollbar mask-gradient-x">
+            <div className="grid grid-cols-5 gap-1.5 mb-6 p-1">
                 {MOOD_CONFIG.map((m) => {
                     const isActive = moodFilter === m.value;
                     return (
@@ -77,32 +77,32 @@ function Gallery() {
                             key={m.value}
                             onClick={() => setMoodFilter(isActive ? null : m.value)}
                             className={`
-                                relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300
-                                border backdrop-blur-sm whitespace-nowrap overflow-hidden group
+                                relative flex flex-col items-center justify-center gap-1 py-3 rounded-2xl transition-all duration-300
+                                border backdrop-blur-md overflow-visible group
                             `}
                             style={{
                                 backgroundColor: isActive ? `${m.color}20` : 'rgba(255,255,255,0.03)',
-                                borderColor: isActive ? m.color : 'rgba(255,255,255,0.1)',
+                                borderColor: isActive ? m.color : 'rgba(255,255,255,0.05)',
                                 color: isActive ? m.color : 'var(--text-secondary)',
-                                boxShadow: isActive ? `0 0 15px ${m.color}40` : 'none',
-                                transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                                boxShadow: isActive ? `0 4px 20px ${m.color}30` : 'none',
+                                transform: isActive ? 'translateY(-2px)' : 'none',
+                                zIndex: isActive ? 10 : 1
                             }}
                         >
                             {/* Color Dot with Glow */}
                             <div
-                                className="w-2 h-2 rounded-full transition-all duration-300"
+                                className="w-2.5 h-2.5 rounded-full transition-all duration-300"
                                 style={{
                                     backgroundColor: m.color,
-                                    boxShadow: `0 0 8px ${m.color}`,
-                                    opacity: isActive ? 1 : 0.7
+                                    boxShadow: isActive ? `0 0 10px ${m.color}` : 'none',
                                 }}
                             />
 
-                            {m.label}
+                            <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">{m.label}</span>
 
                             {/* Active Shine Effect */}
                             {isActive && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 animate-shine" />
+                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/0 via-white/10 to-white/0 animate-pulse pointer-events-none" />
                             )}
                         </button>
                     );
