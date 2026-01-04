@@ -31,15 +31,44 @@ const navItems = [
 function BottomNav() {
     return (
         <nav className="bottom-nav">
-            <div className="bottom-nav-inner">
+            <div className="bottom-nav-inner relative">
                 {navItems.map((item) => (
-                    <NavLink key={item.path} to={item.path} className="nav-item">
+                    <NavLink key={item.path} to={item.path} className="nav-item relative z-10">
                         {({ isActive }) => (
                             <>
-                                <motion.div initial={false} animate={{ scale: isActive ? 1.1 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }} style={{ color: isActive ? 'var(--primary-light)' : 'var(--text-muted)' }}>
+                                <motion.div
+                                    initial={false}
+                                    animate={{
+                                        scale: isActive ? 1.2 : 1,
+                                        y: isActive ? -2 : 0
+                                    }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                    className="relative"
+                                    style={{
+                                        color: isActive ? '#818CF8' : 'var(--text-muted)',
+                                        filter: isActive ? 'drop-shadow(0 0 12px rgba(99, 102, 241, 0.6))' : 'none'
+                                    }}
+                                >
                                     {isActive ? item.iconFilled : item.icon}
+
+                                    {/* Active Dot indicator */}
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="nav-glow"
+                                            className="absolute -inset-4 bg-indigo-500/20 rounded-full blur-md -z-10"
+                                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                        />
+                                    )}
                                 </motion.div>
-                                <span style={{ color: isActive ? 'var(--primary-light)' : 'var(--text-muted)' }}>{item.label}</span>
+                                <motion.span
+                                    animate={{ opacity: isActive ? 1 : 0.7, scale: isActive ? 1.05 : 1 }}
+                                    style={{
+                                        color: isActive ? '#818CF8' : 'var(--text-muted)',
+                                        marginTop: '0.25rem'
+                                    }}
+                                >
+                                    {item.label}
+                                </motion.span>
                             </>
                         )}
                     </NavLink>
