@@ -506,10 +506,11 @@ body {
   right: 0;
   height: 5rem;
   padding-bottom: env(safe-area-inset-bottom);
-  background: rgba(15, 15, 19, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(24, 24, 31, 1);
+  /* Solid Opaque */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   z-index: 100;
   box-shadow: 0 -10px 40px -10px rgba(0, 0, 0, 0.3);
 }
