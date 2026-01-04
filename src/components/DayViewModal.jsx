@@ -4,6 +4,7 @@ import { s3Client } from '../storj';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { useState, useEffect } from 'react';
+import PremiumAudioPlayer from './PremiumAudioPlayer';
 
 const STORJ_CONFIG = {
     bucket: import.meta.env.VITE_STORJ_BUCKET || 'arshita-diary',
@@ -168,7 +169,7 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                     {/* Voice Note Player - Always Show */}
                     {entry.audioUrl && (
                         <div className="p-5 rounded-2xl space-y-4 border border-white/5" style={{ background: 'var(--bg-elevated)' }}>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 mb-2">
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-500/10 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                                 </div>
@@ -179,12 +180,10 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                             </div>
 
                             {audioUrl ? (
-                                <div className="bg-black/20 rounded-xl p-2">
-                                    <audio controls src={audioUrl} className="w-full h-8" style={{ filter: 'invert(1) hue-rotate(180deg)' }} />
-                                </div>
+                                <PremiumAudioPlayer audioUrl={audioUrl} />
                             ) : (
-                                <div className="h-10 flex items-center justify-center bg-black/10 rounded-xl">
-                                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin opacity-50"></div>
+                                <div className="h-32 flex items-center justify-center bg-black/10 rounded-xl">
+                                    <div className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin opacity-50"></div>
                                 </div>
                             )}
                         </div>
