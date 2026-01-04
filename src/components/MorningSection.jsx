@@ -130,7 +130,8 @@ function MorningSection({ todayEntry, isUnlocked }) {
             setUploadingAudio(true);
             const downloadUrl = await uploadAudio(today, blob);
             setAudioUrl(downloadUrl);
-            await saveEntry(today, { audioUrl: downloadUrl, morningCompleted: true, affirmation });
+            // Save with duration for stats tracking
+            await saveEntry(today, { audioUrl: downloadUrl, audioDuration: recordingTime, morningCompleted: true, affirmation });
         } catch (error) {
             console.error('Error uploading:', error);
             alert('Upload failed');

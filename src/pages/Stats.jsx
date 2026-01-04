@@ -61,12 +61,59 @@ function Stats() {
         return data;
     }, [entries]);
 
-    // 3. Voice Stats
+    // 3. Voice Stats (count, total duration, avg duration)
     const voiceStats = useMemo(() => {
         let count = 0;
-        Object.values(entries).forEach(e => { if (e.audioUrl) count++; });
-        return { count };
+        let totalDuration = 0;
+        Object.values(entries).forEach(e => {
+            if (e.audioUrl) {
+                count++;
+                if (e.audioDuration) totalDuration += e.audioDuration;
+            }
+        });
+        const avgDuration = count > 0 ? Math.round(totalDuration / count) : 0;
+        return { count, totalDuration, avgDuration };
     }, [entries]);
+
+    // 4. Average Characters (from Jan 1, 2026, excluding days with 0 chars)
+    const avgCharacters = useMemo(() => {
+        const startDate = '2026-01-01';
+        const today = DateTime.now().toISODate();
+        let totalChars = 0;
+        let daysWithJournal = 0;
+
+        Object.entries(entries).forEach(([date, entry]) => {
+            if (date >= startDate && date <= today) {
+                const chars = entry?.journal?.length || 0;
+                if (chars > 0) {
+                    totalChars += chars;
+                    daysWithJournal++;
+                }
+            }
+        });
+
+        return daysWithJournal > 0 ? Math.round(totalChars / daysWithJournal) : 0;
+    }, [entries]);
+
+    // 5. Voice Duration Data (last 14 days - for graph)
+    const voiceDurationData = useMemo(() => {
+        const data = [];
+        const today = DateTime.now();
+        for (let i = 13; i >= 0; i--) {
+            const date = today.minus({ days: i }).toISODate();
+            const entry = entries[date];
+            const duration = entry?.audioDuration || 0;
+            data.push({ date: DateTime.fromISO(date).toFormat('dd/MM'), duration });
+        }
+        return data;
+    }, [entries]);
+
+    // Helper: format duration (seconds to mm:ss)
+    const formatDuration = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     const moodData = useMemo(() => {
         const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -156,18 +203,69 @@ function Stats() {
                     </ResponsiveContainer>
                 </div>
             </div>
-
-            {/* Voice Summary Card */}
-            <div className="card mb-6 flex items-center justify-between">
-                <div>
-                    <h3 className="card-title">Voice Memories</h3>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Total recordings saved</p>
+            {/* Voice Duration Chart */}
+            <div className="card mb-6">
+                <h3 className="card-title mb-4">Voice Duration (Seconds)</h3>
+                <div className="h-48 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={voiceDurationData}>
+                            <defs>
+                                <linearGradient id="colorDuration" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                            <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} interval={2} />
+                            <YAxis hide />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '8px' }}
+                                itemStyle={{ color: 'var(--text)' }}
+                                labelStyle={{ color: 'var(--text-muted)' }}
+                                formatter={(value) => [formatDuration(value), 'Duration']}
+                            />
+                            <Area type="monotone" dataKey="duration" stroke="#06b6d4" fillOpacity={1} fill="url(#colorDuration)" strokeWidth={2} />
+                        </AreaChart>
+                    </ResponsiveContainer>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-purple-500/20 text-purple-400">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+            </div>
+
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-4 gap-3 mb-6">
+                {/* Recordings */}
+                <div className="card flex flex-col items-center justify-center py-4">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-500/20 text-purple-400 mb-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                     </div>
-                    <span className="text-2xl font-bold">{voiceStats.count}</span>
+                    <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{voiceStats.count}</div>
+                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Recordings</div>
+                </div>
+
+                {/* Total Time */}
+                <div className="card flex flex-col items-center justify-center py-4">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-400 mb-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{formatDuration(voiceStats.totalDuration)}</div>
+                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Total Time</div>
+                </div>
+
+                {/* Avg Duration */}
+                <div className="card flex flex-col items-center justify-center py-4">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-cyan-500/20 text-cyan-400 mb-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    </div>
+                    <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{formatDuration(voiceStats.avgDuration)}</div>
+                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Avg Duration</div>
+                </div>
+
+                {/* Avg Characters */}
+                <div className="card flex flex-col items-center justify-center py-4">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-pink-500/20 text-pink-400 mb-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    </div>
+                    <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{avgCharacters.toLocaleString()}</div>
+                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Avg Chars</div>
                 </div>
             </div>
 
