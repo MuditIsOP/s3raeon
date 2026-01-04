@@ -116,77 +116,113 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                 </div>
 
                 <div className="space-y-8 pb-8">
-                    {/* Photos - Hide in Voice Mode */}
+                    {/* Photos Section */}
                     {mode !== 'voice' && entry.photos && entry.photos.length > 0 && (
-                        <div className="grid grid-cols-2 gap-3">
-                            {entry.photos.map((photo, i) => (
-                                <div key={i} className="aspect-square rounded-2xl overflow-hidden bg-white/5 relative shadow-lg">
-                                    {photoUrls[i] ? (
-                                        <img src={photoUrls[i]} alt="Memory" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-xs text-muted">Loading...</div>
-                                    )}
-                                    {photo.starred && <div className="absolute top-2 right-2 text-yellow-400 drop-shadow-md">★</div>}
-                                </div>
-                            ))}
-                        </div>
+                        <section>
+                            <div className="flex items-center gap-2 mb-4">
+                                <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Photo Memories</h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                {entry.photos.map((photo, i) => (
+                                    <div key={i} className="aspect-square rounded-2xl overflow-hidden bg-white/5 relative shadow-lg group">
+                                        {photoUrls[i] ? (
+                                            <img src={photoUrls[i]} alt="Memory" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-xs text-muted">Loading...</div>
+                                        )}
+                                        {photo.starred && <div className="absolute top-2 right-2 text-yellow-400 drop-shadow-md">★</div>}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
                     )}
 
-                    {/* Affirmation - Show ONLY in Voice Mode */}
+                    {/* Divider if needed */}
+                    {mode !== 'voice' && entry.photos?.length > 0 && entry.journal && <div className="h-px bg-white/5" />}
+
+                    {/* Journal Section */}
+                    {mode !== 'voice' && entry.journal && (
+                        <section>
+                            <div className="flex items-center gap-2 mb-4">
+                                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Daily Journal</h3>
+                            </div>
+
+                            <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
+                                {/* Prompt */}
+                                {entry.prompt && (
+                                    <div className="mb-4 pl-4 border-l-2 border-indigo-500/50">
+                                        <p className="text-sm font-medium italic text-indigo-200/80">
+                                            "{entry.prompt}"
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Answer */}
+                                <p className="text-base leading-relaxed whitespace-pre-wrap font-light text-[var(--text-secondary)]">
+                                    {entry.journal}
+                                </p>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Voice Mode Affirmation View */}
                     {mode === 'voice' && entry.affirmation && (
-                        <div className="space-y-3">
-                            <h3 className="text-xs font-bold uppercase tracking-wider opacity-50 flex items-center gap-2">
-                                <span className="w-1 h-1 rounded-full bg-current"></span>
-                                Daily Affirmation
-                            </h3>
-                            <p className="text-xl font-serif italic text-center px-4 py-8" style={{ color: 'var(--text)' }}>
+                        <div className="space-y-6 text-center py-8">
+                            <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                            </div>
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)]">Daily Affirmation</h3>
+                            <p className="text-2xl font-serif italic text-[var(--text)] px-4 leading-relaxed">
                                 "{entry.affirmation}"
                             </p>
                         </div>
                     )}
 
-                    {/* Journal - Hide in Voice Mode */}
-                    {mode !== 'voice' && entry.journal && (
-                        <div className="space-y-3">
-                            <h3 className="text-xs font-bold uppercase tracking-wider opacity-50 flex items-center gap-2">
-                                <span className="w-1 h-1 rounded-full bg-current"></span>
-                                Journal Entry
-                            </h3>
+                    {/* Divider */}
+                    {mode !== 'voice' && (entry.journal || entry.photos?.length > 0) && entry.audioUrl && <div className="h-px bg-white/5" />}
 
-                            {/* Prompt Display */}
-                            {entry.prompt && (
-                                <p className="text-sm font-medium italic mb-2" style={{ color: 'var(--text-muted)' }}>
-                                    {entry.prompt}
-                                </p>
+                    {/* Voice Player Section */}
+                    {entry.audioUrl && (
+                        <section>
+                            {mode !== 'voice' && (
+                                <div className="flex items-center gap-2 mb-4">
+                                    <svg className="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Voice Note</h3>
+                                </div>
                             )}
 
-                            <p className="text-base leading-relaxed whitespace-pre-wrap font-light" style={{ color: 'var(--text-secondary)' }}>
-                                {entry.journal}
-                            </p>
-                        </div>
-                    )}
+                            <div className="p-1 rounded-3xl" style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)' }}>
+                                <div className="p-5 rounded-[1.3rem] space-y-4 bg-[#0F0F13] border border-white/5 relative overflow-hidden">
+                                    {/* Glow Effect */}
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] pointer-events-none" />
 
-                    {/* Voice Note Player - Always Show */}
-                    {entry.audioUrl && (
-                        <div className="p-5 rounded-2xl space-y-4 border border-white/5" style={{ background: 'var(--bg-elevated)' }}>
-                            <div className="flex items-center gap-4 mb-2">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-500/10 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                                </div>
-                                <div>
-                                    <p className="text-base font-semibold">Voice Affirmation</p>
-                                    <p className="text-xs opacity-60">Recorded on {formatDate(date)}</p>
+                                    <div className="flex items-center gap-4 mb-2 relative z-10">
+                                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-indigo-400 border border-indigo-500/20">
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-base font-bold text-[var(--text)]">Voice Affirmation</p>
+                                            <p className="text-xs text-[var(--text-muted)]">Recorded on {formatDate(date)}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative z-10">
+                                        {audioUrl ? (
+                                            <PremiumAudioPlayer audioUrl={audioUrl} />
+                                        ) : (
+                                            <div className="h-32 flex items-center justify-center bg-black/20 rounded-xl border border-white/5">
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                                    <span className="text-xs text-[var(--text-muted)]">Loading audio...</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-
-                            {audioUrl ? (
-                                <PremiumAudioPlayer audioUrl={audioUrl} />
-                            ) : (
-                                <div className="h-32 flex items-center justify-center bg-black/10 rounded-xl">
-                                    <div className="w-8 h-8 border-3 border-current border-t-transparent rounded-full animate-spin opacity-50"></div>
-                                </div>
-                            )}
-                        </div>
+                        </section>
                     )}
 
                     {/* Fallback for empty entries */}
