@@ -18,12 +18,12 @@ function TermsModal({ onAccept, onClose, readOnly = false }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/95 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/40 via-[#0F0F13] to-[#0F0F13]"
         >
             <motion.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
-                className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 shadow-2xl overflow-hidden relative"
+                className="w-full max-w-md card relative overflow-hidden"
             >
                 {/* Decorative background element */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--primary)] filter blur-[80px] opacity-20 pointer-events-none" />
