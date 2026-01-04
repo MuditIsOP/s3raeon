@@ -32,13 +32,18 @@ const DEFAULT_PROFILE = {
     profilePhotoUrl: null,
 };
 
-// Load profile from Storj (no caching)
+// Load profile from Storj (no caching - strict)
 export const loadProfile = async () => {
     try {
         const command = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: 'profile/profile.json' });
-        const response = await s3Client.send(command);
-        const body = await response.Body.transformToString();
-        const profile = JSON.parse(body);
+        // Use signed URL with timestamp to force fresh fetch
+        const url = await getSignedUrl(s3Client, command, { expiresIn: 60 });
+        const response = await fetch(`${url}&t=${Date.now()}`);
+        if (!response.ok) {
+            if (response.status === 404) return DEFAULT_PROFILE;
+            throw new Error('Failed to fetch profile');
+        }
+        const profile = await response.json();
         return profile;
     } catch (error) {
         if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
@@ -56,6 +61,7 @@ export const saveProfile = async (profileData) => {
         Key: 'profile/profile.json',
         Body: JSON.stringify(profileData, null, 2),
         ContentType: 'application/json',
+        CacheControl: 'no-cache, no-store, must-revalidate',
     });
     await s3Client.send(command);
     return profileData;
