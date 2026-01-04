@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { useDiary } from '../App';
@@ -23,12 +23,44 @@ const STAT_ICONS = {
     rate: <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
 };
 
-function Stats() {
-    const { entries, currentStreak } = useDiary();
+const Stats = () => {
+    const { entries, currentStreak, saveEntry } = useDiary(); // Get saveEntry
     const stats = useMemo(() => getStreakStats(entries), [entries]);
     const heatMapData = useMemo(() => generateHeatMapData(entries, 8), [entries]);
     const milestoneProgress = useMemo(() => getMilestoneProgress(currentStreak), [currentStreak]);
     const dayHeaders = useMemo(() => getRotatedDayHeaders(), []);
+
+    // Sync state
+    const [isSyncing, setIsSyncing] = React.useState(false);
+
+    // Identify missing data
+    const missingDurationCount = useMemo(() =>
+        Object.values(entries).filter(e => e.audioUrl && !e.audioDuration).length
+        , [entries]);
+
+    const handleSyncVoiceStats = async () => {
+        setIsSyncing(true);
+        try {
+            const missingEntries = Object.entries(entries).filter(([_, e]) => e.audioUrl && !e.audioDuration);
+            for (const [date, entry] of missingEntries) {
+                // Fetch basic metadata to get duration
+                // We use a temporary Audio element
+                await new Promise((resolve) => {
+                    const audio = new Audio(entry.audioUrl);
+                    audio.onloadedmetadata = async () => {
+                        const duration = Math.round(audio.duration);
+                        await saveEntry(date, { ...entry, audioDuration: duration });
+                        resolve();
+                    };
+                    audio.onerror = resolve; // Skip on error
+                });
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     // 1. Mood Trends (Last 30 Days)
     const moodTrendData = useMemo(() => {
@@ -37,8 +69,6 @@ function Stats() {
         for (let i = 29; i >= 0; i--) {
             const date = today.minus({ days: i }).toISODate();
             const entry = entries[date];
-            // Invert mood value for chart logic (1=Great should be high, 5=Hard should be low)
-            // Or keep 1-5 and fix axis. Let's map 1->5, 2->4, 3->3, 4->2, 5->1 for visual "Up is Good"
             const rawMood = entry?.mood;
             const value = rawMood ? (6 - rawMood) : null;
             data.push({ date: DateTime.fromISO(date).toFormat('dd/MM'), value, rawMood });
@@ -46,22 +76,21 @@ function Stats() {
         return data;
     }, [entries]);
 
-    // 2. Writing Volume (Last 14 Days) - Journal Only
+    // 2. Writing Volume
     const writingVolumeData = useMemo(() => {
         const data = [];
         const today = DateTime.now();
-        for (let i = 13; i >= 0; i--) { // Last 14 days
+        for (let i = 13; i >= 0; i--) {
             const date = today.minus({ days: i }).toISODate();
             const entry = entries[date];
-            // Only count actual journal text provided by user. 
-            // Exclude affirmation as it might be pre-filled or not "expressive writing".
             const charCount = entry?.journal ? entry.journal.length : 0;
             data.push({ date: DateTime.fromISO(date).toFormat('dd/MM'), chars: charCount });
         }
         return data;
     }, [entries]);
 
-    // 3. Voice Stats (count, total duration, avg duration)
+    // ... (rest of stats logic) ...
+
     const voiceStats = useMemo(() => {
         let count = 0;
         let totalDuration = 0;
@@ -75,13 +104,12 @@ function Stats() {
         return { count, totalDuration, avgDuration };
     }, [entries]);
 
-    // 4. Average Characters (from Jan 1, 2026, excluding days with 0 chars)
+    // 4. Avg Characters
     const avgCharacters = useMemo(() => {
         const startDate = '2026-01-01';
         const today = DateTime.now().toISODate();
         let totalChars = 0;
         let daysWithJournal = 0;
-
         Object.entries(entries).forEach(([date, entry]) => {
             if (date >= startDate && date <= today) {
                 const chars = entry?.journal?.length || 0;
@@ -91,7 +119,6 @@ function Stats() {
                 }
             }
         });
-
         return daysWithJournal > 0 ? Math.round(totalChars / daysWithJournal) : 0;
     }, [entries]);
 
@@ -132,7 +159,35 @@ function Stats() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="page">
             <Header title="Stats" />
 
-            {/* Core Stats Grid */}
+            {/* Repair Banner */}
+            {missingDurationCount > 0 && (
+                <div className="mb-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex flex-col gap-2">
+                    <div className="flex items-center gap-2 text-orange-500 font-semibold">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        <span>Sync Required</span>
+                    </div>
+                    <p className="text-sm text-[var(--text-muted)]">
+                        {missingDurationCount} voice recordings are missing duration data. Sync to update stats.
+                    </p>
+                    <button
+                        onClick={handleSyncVoiceStats}
+                        disabled={isSyncing}
+                        className="self-start px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold disabled:opacity-50 flex items-center gap-2"
+                    >
+                        {isSyncing ? (
+                            <>
+                                <svg className="animate-spin h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Syncing...
+                            </>
+                        ) : 'Sync Now'}
+                    </button>
+                </div>
+            )}
+
+            {/* Core Stats Grid (rest identical) */}
             <div className="grid grid-cols-2 gap-3 mb-6">
                 {statItems.map((stat, i) => (
                     <motion.div
