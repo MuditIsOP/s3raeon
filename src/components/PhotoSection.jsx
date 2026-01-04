@@ -52,7 +52,12 @@ function PhotoSection({ todayEntry }) {
         try {
             setUploading(true);
             const downloadUrl = await uploadPhoto(today, previewImage.file);
-            const newPhoto = { url: downloadUrl, timestamp: new Date().toISOString(), starred: false };
+            const newPhoto = {
+                url: downloadUrl,
+                timestamp: new Date().toISOString(),
+                starred: false,
+                size: previewImage.file.size
+            };
             const updatedPhotos = [...photos, newPhoto];
             setPhotos(updatedPhotos);
             await saveEntry(today, { photos: updatedPhotos });

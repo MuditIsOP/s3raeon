@@ -5,6 +5,8 @@ import { useDiary } from '../App';
 import { getStreakStats, generateHeatMapData, getMilestoneProgress, getRotatedDayHeaders } from '../utils/streakUtils';
 import { DateTime } from 'luxon';
 import Header from '../components/Header';
+import { s3Client } from '../storj';
+import { HeadObjectCommand } from '@aws-sdk/client-s3';
 
 const MOOD_CONFIG = [
     { value: 1, label: 'Great', color: '#22c55e' },
@@ -38,13 +40,18 @@ const Stats = () => {
         Object.values(entries).filter(e => e.audioUrl && !e.audioDuration).length
         , [entries]);
 
-    const handleSyncVoiceStats = async () => {
+    const missingPhotoSizeCount = useMemo(() =>
+        Object.values(entries).reduce((acc, e) => acc + (e.photos?.filter(p => !p.size).length || 0), 0)
+        , [entries]);
+
+    const handleSyncAllStats = async () => {
         setIsSyncing(true);
+        const bucket = import.meta.env.VITE_STORJ_BUCKET || 'arshita-diary';
+
         try {
-            const missingEntries = Object.entries(entries).filter(([_, e]) => e.audioUrl && !e.audioDuration);
-            for (const [date, entry] of missingEntries) {
-                // Fetch basic metadata to get duration
-                // We use a temporary Audio element
+            // 1. Sync Audio Duration
+            const missingAudioEntries = Object.entries(entries).filter(([_, e]) => e.audioUrl && !e.audioDuration);
+            for (const [date, entry] of missingAudioEntries) {
                 await new Promise((resolve) => {
                     const audio = new Audio(entry.audioUrl);
                     audio.onloadedmetadata = async () => {
@@ -52,11 +59,37 @@ const Stats = () => {
                         await saveEntry(date, { ...entry, audioDuration: duration });
                         resolve();
                     };
-                    audio.onerror = resolve; // Skip on error
+                    audio.onerror = resolve;
                 });
             }
+
+            // 2. Sync Photo Sizes
+            const entriesWithMissingPhotos = Object.entries(entries).filter(([_, e]) => e.photos?.some(p => !p.size));
+            for (const [date, entry] of entriesWithMissingPhotos) {
+                const newPhotos = await Promise.all(entry.photos.map(async (p) => {
+                    if (p.size) return p;
+                    try {
+                        // Assuming p.url is the key. If it's a full URL, we might need to parse or just try HEAD on key
+                        // The app stores keys usually "photos/..."
+                        const command = new HeadObjectCommand({
+                            Bucket: bucket,
+                            Key: p.url
+                        });
+                        const response = await s3Client.send(command);
+                        // console.log("Fetched size for", p.url, response.ContentLength);
+                        return { ...p, size: response.ContentLength };
+                    } catch (err) {
+                        console.warn("Failed to fetch size for", p.url);
+                        return p;
+                    }
+                }));
+
+                // Update entry
+                await saveEntry(date, { ...entry, photos: newPhotos });
+            }
+
         } catch (e) {
-            console.error(e);
+            console.error("Sync failed", e);
         } finally {
             setIsSyncing(false);
         }
@@ -148,6 +181,28 @@ const Stats = () => {
         return MOOD_CONFIG.map((m) => ({ ...m, count: counts[m.value] })).filter((m) => m.count > 0);
     }, [entries]);
 
+    const photoStats = useMemo(() => {
+        let count = 0;
+        let totalSize = 0;
+        Object.values(entries).forEach(e => {
+            if (e.photos && e.photos.length > 0) {
+                count += e.photos.length;
+                e.photos.forEach(p => {
+                    if (p.size) totalSize += p.size;
+                });
+            }
+        });
+        return { count, totalSize };
+    }, [entries]);
+
+    const formatSize = (bytes) => {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+
     const statItems = [
         { icon: STAT_ICONS.current, value: stats.currentStreak, label: 'Current Streak', sub: 'days' },
         { icon: STAT_ICONS.best, value: stats.longestStreak, label: 'Longest Streak', sub: 'days' },
@@ -159,30 +214,28 @@ const Stats = () => {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="page">
             <Header title="Stats" />
 
-            {/* Repair Banner */}
-            {missingDurationCount > 0 && (
+            {/* Sync Banner */}
+            {(missingDurationCount > 0 || missingPhotoSizeCount > 0) && (
                 <div className="mb-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex flex-col gap-2">
                     <div className="flex items-center gap-2 text-orange-500 font-semibold">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                        <span>Sync Required</span>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        <span>Data Sync Required</span>
                     </div>
                     <p className="text-sm text-[var(--text-muted)]">
-                        {missingDurationCount} voice recordings are missing duration data. Sync to update stats.
+                        {missingDurationCount > 0 && <span>• {missingDurationCount} voice logs missing duration<br /></span>}
+                        {missingPhotoSizeCount > 0 && <span>• {missingPhotoSizeCount} photos missing size info</span>}
                     </p>
                     <button
-                        onClick={handleSyncVoiceStats}
+                        onClick={handleSyncAllStats}
                         disabled={isSyncing}
-                        className="self-start px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold disabled:opacity-50 flex items-center gap-2"
+                        className="self-start px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold disabled:opacity-50 flex items-center gap-2 mt-1"
                     >
                         {isSyncing ? (
                             <>
-                                <svg className="animate-spin h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Syncing...
+                                <svg className="animate-spin h-3 w-3 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Syncing Metadata...
                             </>
-                        ) : 'Sync Now'}
+                        ) : 'Sync All Data'}
                     </button>
                 </div>
             )}
@@ -285,7 +338,28 @@ const Stats = () => {
                 </div>
             </div>
 
-            {/* Quick Stats Row */}
+            {/* Photo Stats Row */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="card flex flex-col items-center justify-center py-4 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 blur-2xl pointer-events-none" />
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-500/20 text-yellow-400 mb-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    </div>
+                    <div className="text-2xl font-bold text-gradient mb-1">{photoStats.count}</div>
+                    <div className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Total Memories</div>
+                </div>
+
+                <div className="card flex flex-col items-center justify-center py-4 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-16 h-16 bg-blue-500/10 blur-2xl pointer-events-none" />
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-400 mb-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    </div>
+                    <div className="text-2xl font-bold text-gradient mb-1">{formatSize(photoStats.totalSize)}</div>
+                    <div className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Storage Used</div>
+                </div>
+            </div>
+
+            {/* Quick Stats Row (Voice & Text) */}
             <div className="grid grid-cols-4 gap-3 mb-6">
                 {/* Recordings */}
                 <div className="card flex flex-col items-center justify-center py-4">
