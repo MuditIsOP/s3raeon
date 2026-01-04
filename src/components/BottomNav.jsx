@@ -46,19 +46,10 @@ function BottomNav() {
                                     className="relative"
                                     style={{
                                         color: isActive ? '#818CF8' : 'var(--text-muted)',
-                                        filter: isActive ? 'drop-shadow(0 0 12px rgba(99, 102, 241, 0.6))' : 'none'
+                                        filter: isActive ? 'drop-shadow(0 0 8px rgba(99, 102, 241, 0.5))' : 'none'
                                     }}
                                 >
                                     {isActive ? item.iconFilled : item.icon}
-
-                                    {/* Active Dot indicator */}
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="nav-glow"
-                                            className="absolute -inset-4 bg-indigo-500/20 rounded-full blur-md -z-10"
-                                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                        />
-                                    )}
                                 </motion.div>
                                 <motion.span
                                     animate={{ opacity: isActive ? 1 : 0.7, scale: isActive ? 1.05 : 1 }}
