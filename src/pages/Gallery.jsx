@@ -19,45 +19,49 @@ function Gallery() {
     const [activeTab, setActiveTab] = useState('all');
     const [moodFilter, setMoodFilter] = useState(null);
     const [sortOrder, setSortOrder] = useState('desc'); // 'asc' | 'desc'
-    const [groupByDate, setGroupByDate] = useState(true);
+    const [groupMode, setGroupMode] = useState('day'); // 'day' | 'month'
 
-    const { allPhotos, favorites, monthlyPhotos } = useMemo(() => {
-        const all = [], favs = [], monthly = {};
+    const { allPhotos, favorites, groupedPhotos } = useMemo(() => {
+        const all = [], favs = [], groups = {};
         Object.entries(entries).forEach(([date, entry]) => {
             if (entry.photos) {
-                // Filter by mood if active
                 if (moodFilter && entry.mood !== moodFilter) return;
 
                 entry.photos.forEach((photo, index) => {
                     const photoData = { ...photo, date, index, dayOfMonth: getDayOfMonth(date), mood: entry.mood, journal: entry.journal };
                     all.push(photoData);
                     if (photo.starred) favs.push(photoData);
-                    const monthKey = DateTime.fromISO(date).toFormat('yyyy-MM');
-                    if (!monthly[monthKey]) monthly[monthKey] = { label: DateTime.fromISO(date).toFormat('MMMM yyyy'), photos: [] };
-                    monthly[monthKey].photos.push(photoData);
+
+                    // Grouping Logic
+                    let groupKey, groupLabel;
+                    if (groupMode === 'day') {
+                        groupKey = date; // YYYY-MM-DD
+                        groupLabel = DateTime.fromISO(date).toFormat('cccc, MMMM d, yyyy');
+                    } else {
+                        groupKey = DateTime.fromISO(date).toFormat('yyyy-MM');
+                        groupLabel = DateTime.fromISO(date).toFormat('MMMM yyyy');
+                    }
+
+                    if (!groups[groupKey]) groups[groupKey] = { label: groupLabel, photos: [] };
+                    groups[groupKey].photos.push(photoData);
                 });
             }
         });
 
-        // Sort function: Newest first by timestamp
         const getTime = (p) => DateTime.fromISO(p.timestamp || p.date).toMillis();
         const compare = (a, b) => sortOrder === 'asc' ? getTime(a) - getTime(b) : getTime(b) - getTime(a);
 
         all.sort(compare);
         favs.sort(compare);
+        Object.values(groups).forEach(g => g.photos.sort(compare));
 
-        // Also sort photos within each month group
-        Object.values(monthly).forEach(m => m.photos.sort(compare));
-
-        return { allPhotos: all, favorites: favs, monthlyPhotos: monthly };
-    }, [entries, moodFilter, sortOrder]);
+        return { allPhotos: all, favorites: favs, groupedPhotos: groups };
+    }, [entries, moodFilter, sortOrder, groupMode]);
 
     // ... (rest of handlers) ...
 
     const StarIcon = ({ filled }) => (
-        <svg className="w-4 h-4" fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
+        <svg className="w-4 h-4" fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
     );
 
     return (
@@ -95,53 +99,58 @@ function Gallery() {
             </div>
 
             {/* Controls & Tabs Row */}
-            <div className="flex items-center justify-between gap-3 mb-6">
-                {/* Tabs */}
-                <div className="flex gap-2 flex-1">
-                    {['all', 'favorites'].map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`flex-1 py-2.5 px-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${activeTab === tab ? 'text-white shadow-lg' : ''}`}
-                            style={{
-                                background: activeTab === tab ? 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)' : 'var(--bg-elevated)',
-                                color: activeTab === tab ? 'white' : 'var(--text-secondary)',
-                                border: `1px solid ${activeTab === tab ? 'transparent' : 'var(--border)'}`
-                            }}
-                        >
-                            {tab === 'all' ? `All` : `Favs`}
-                        </button>
-                    ))}
+            <div className="flex flex-col gap-3 mb-6">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex gap-2 flex-1">
+                        {['all', 'favorites'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${activeTab === tab ? 'text-white shadow-lg' : ''}`}
+                                style={{
+                                    background: activeTab === tab ? 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)' : 'var(--bg-elevated)',
+                                    color: activeTab === tab ? 'white' : 'var(--text-secondary)',
+                                    border: `1px solid ${activeTab === tab ? 'transparent' : 'var(--border)'}`
+                                }}
+                            >
+                                {tab === 'all' ? `All (${allPhotos.length})` : `Favs (${favorites.length})`}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Divider */}
-                <div className="w-px h-8 bg-white/10 mx-1"></div>
+                {/* Second Row: Sorting & Grouping */}
+                <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium text-[var(--text-muted)] ml-1">
+                        Sort by <span className="text-[var(--text)]">{sortOrder === 'desc' ? 'Newest' : 'Oldest'}</span> • Group by <span className="text-[var(--text)]">{groupMode === 'day' ? 'Day' : 'Month'}</span>
+                    </p>
+                    <div className="flex gap-2">
+                        {/* Sort Toggle */}
+                        <button
+                            onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-white"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {sortOrder === 'desc' ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                                )}
+                            </svg>
+                        </button>
 
-                {/* View Controls */}
-                <div className="flex gap-2">
-                    {/* Sort Toggle */}
-                    <button
-                        onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-                        className="w-10 h-10 rounded-lg flex items-center justify-center transition-all bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-white"
-                        title={sortOrder === 'desc' ? "Newest First" : "Oldest First"}
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            {sortOrder === 'desc' ? (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                        {/* Group Mode Toggle */}
+                        <button
+                            onClick={() => setGroupMode(prev => prev === 'day' ? 'month' : 'day')}
+                            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-white"
+                        >
+                            {groupMode === 'day' ? (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             ) : (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
                             )}
-                        </svg>
-                    </button>
-
-                    {/* Group Toggle */}
-                    <button
-                        onClick={() => setGroupByDate(prev => !prev)}
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all border ${groupByDate ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-secondary)]'}`}
-                        title="Group by Date"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-                    </button>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -171,23 +180,16 @@ function Gallery() {
                                 <p style={{ color: 'var(--text-secondary)' }}>No photos yet</p>
                             </div>
                         ) : (
-                            // Conditional Rendering: Grouped vs Flat
-                            groupByDate ? (
-                                Object.entries(monthlyPhotos)
-                                    .sort(([a], [b]) => sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a))
-                                    .map(([monthKey, { label, photos }]) => (
-                                        <div key={monthKey} className="mb-6">
-                                            <p className="text-label mb-3 sticky top-0 bg-[var(--bg)]/80 backdrop-blur-sm z-10 py-2">{label}</p>
-                                            <div className="grid grid-cols-3 gap-1">
-                                                {photos.map((photo) => <PhotoTile key={`${photo.date}-${photo.index}`} photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />)}
-                                            </div>
+                            Object.entries(groupedPhotos)
+                                .sort(([a], [b]) => sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a))
+                                .map(([key, { label, photos }]) => (
+                                    <div key={key} className="mb-6">
+                                        <p className="text-label mb-3 sticky top-0 bg-[var(--bg)]/80 backdrop-blur-sm z-10 py-2">{label}</p>
+                                        <div className="grid grid-cols-3 gap-1">
+                                            {photos.map((photo) => <PhotoTile key={`${photo.date}-${photo.index}`} photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />)}
                                         </div>
-                                    ))
-                            ) : (
-                                <div className="grid grid-cols-3 gap-1">
-                                    {allPhotos.map((photo) => <PhotoTile key={`${photo.date}-${photo.index}`} photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />)}
-                                </div>
-                            )
+                                    </div>
+                                ))
                         )}
                     </motion.div>
                 )}
