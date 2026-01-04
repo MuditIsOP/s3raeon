@@ -168,22 +168,44 @@ function More() {
                     </div>
 
                     {/* Mood Filter Bar */}
-                    <div className="flex items-center justify-between mb-4 overflow-x-auto pb-2 gap-2 no-scrollbar">
-                        {MOOD_CONFIG.map((m) => (
-                            <button
-                                key={m.value}
-                                onClick={() => handleMoodSelect(m.value)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${moodFilter === m.value ? 'ring-2 ring-offset-2 ring-offset-[#000]' : 'opacity-70 hover:opacity-100'}`}
-                                style={{
-                                    backgroundColor: moodFilter === m.value ? m.color : 'var(--bg-elevated)',
-                                    color: moodFilter === m.value ? '#fff' : 'var(--text)',
-                                    borderColor: m.color
-                                }}
-                            >
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: moodFilter === m.value ? '#fff' : m.color }} />
-                                {m.label}
-                            </button>
-                        ))}
+                    <div className="flex items-center mb-4 overflow-x-auto pb-2 gap-3 no-scrollbar mask-gradient-x">
+                        {MOOD_CONFIG.map((m) => {
+                            const isActive = moodFilter === m.value;
+                            return (
+                                <button
+                                    key={m.value}
+                                    onClick={() => handleMoodSelect(m.value)}
+                                    className={`
+                                        relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300
+                                        border backdrop-blur-sm whitespace-nowrap overflow-hidden group
+                                    `}
+                                    style={{
+                                        backgroundColor: isActive ? `${m.color}20` : 'rgba(255,255,255,0.03)',
+                                        borderColor: isActive ? m.color : 'rgba(255,255,255,0.1)',
+                                        color: isActive ? m.color : 'var(--text-secondary)',
+                                        boxShadow: isActive ? `0 0 15px ${m.color}40` : 'none',
+                                        transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                                    }}
+                                >
+                                    {/* Color Dot with Glow */}
+                                    <div
+                                        className="w-2 h-2 rounded-full transition-all duration-300"
+                                        style={{
+                                            backgroundColor: m.color,
+                                            boxShadow: `0 0 8px ${m.color}`,
+                                            opacity: isActive ? 1 : 0.7
+                                        }}
+                                    />
+
+                                    {m.label}
+
+                                    {/* Active Shine Effect */}
+                                    {isActive && (
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 animate-shine" />
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     {searchResults.length === 0 && !isVoiceMode && searchQuery.length >= 2 && <p className="text-center py-8" style={{ color: 'var(--text-muted)' }}>No results</p>}

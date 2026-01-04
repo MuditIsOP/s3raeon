@@ -619,10 +619,34 @@ body {
   background-clip: text;
 }
 
+
 .text-label {
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+}
+
+/* =============================================
+   PREMIUM UTILITIES
+   ============================================= */
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+.animate-shine {
+  animation: shine 3s infinite linear;
+}
+
+.mask-gradient-x {
+  mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
 }
