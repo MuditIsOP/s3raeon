@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { useDiary } from '../App';
-import { getStreakStats, generateHeatMapData, getMilestoneProgress } from '../utils/streakUtils';
+import { getStreakStats, generateHeatMapData, getMilestoneProgress, getRotatedDayHeaders } from '../utils/streakUtils';
 import { DateTime } from 'luxon';
 import Header from '../components/Header';
 
@@ -28,6 +28,7 @@ function Stats() {
     const stats = useMemo(() => getStreakStats(entries), [entries]);
     const heatMapData = useMemo(() => generateHeatMapData(entries, 8), [entries]);
     const milestoneProgress = useMemo(() => getMilestoneProgress(currentStreak), [currentStreak]);
+    const dayHeaders = useMemo(() => getRotatedDayHeaders(), []);
 
     // 1. Mood Trends (Last 30 Days)
     const moodTrendData = useMemo(() => {
@@ -180,14 +181,11 @@ function Stats() {
                     </div>
                 </div>
                 <div className="grid grid-cols-7 gap-1.5 mb-2">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                    {dayHeaders.map((d, i) => (
                         <div key={i} className="text-[10px] text-center font-bold opacity-40" style={{ color: 'var(--text)' }}>{d}</div>
                     ))}
                 </div>
                 <div className="grid grid-cols-7 gap-1.5">
-                    {heatMapData.length > 0 && Array.from({ length: (heatMapData[0].day === 7 ? 0 : heatMapData[0].day) }).map((_, i) => (
-                        <div key={`pad-${i}`} />
-                    ))}
                     {heatMapData.map((day) => (
                         <div key={day.date} className="aspect-square rounded-md transition-all hover:scale-110" style={{ backgroundColor: day.hasEntry && day.mood ? MOOD_CONFIG.find((m) => m.value === day.mood)?.color : day.hasEntry ? 'var(--primary)' : 'var(--bg-elevated)' }} title={day.date} />
                     ))}

@@ -137,6 +137,7 @@ export const getMilestoneProgress = (streak) => {
 
 /**
  * Generate heat map data for the last N weeks
+ * Data fills completely - today is always the last cell
  * @param {Object} entries - Object with date keys
  * @param {number} weeks - Number of weeks to include
  * @returns {Array} Heat map data
@@ -144,16 +145,17 @@ export const getMilestoneProgress = (streak) => {
 export const generateHeatMapData = (entries, weeks = 12) => {
     const today = DateTime.now().setZone(IST_ZONE).startOf('day');
     const data = [];
+    const totalDays = weeks * 7;
 
-    for (let i = weeks * 7 - 1; i >= 0; i--) {
+    // Go back totalDays-1, so today is the LAST cell
+    for (let i = totalDays - 1; i >= 0; i--) {
         const date = today.minus({ days: i });
         const dateStr = date.toFormat('yyyy-MM-dd');
         const entry = entries?.[dateStr];
 
         data.push({
             date: dateStr,
-            day: date.weekday,
-            week: Math.floor(i / 7),
+            day: date.weekday, // 1=Mon, 7=Sun
             hasEntry: !!entry?.completed,
             mood: entry?.mood || null,
             weekLabel: date.toFormat('MMM d')
@@ -161,6 +163,25 @@ export const generateHeatMapData = (entries, weeks = 12) => {
     }
 
     return data;
+};
+
+/**
+ * Get rotated day headers so that "today" aligns with the last cell
+ * @returns {Array} Array of single-letter day headers
+ */
+export const getRotatedDayHeaders = () => {
+    const today = DateTime.now().setZone(IST_ZONE);
+    const todayWeekday = today.weekday; // 1=Mon, 7=Sun
+
+    // Full week starting from Monday
+    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S']; // Mon to Sun
+
+    // We want the header to start from the day AFTER today
+    // So if today is Monday (1), we rotate to start from Tuesday (index 1)
+    const startIndex = todayWeekday % 7; // Tomorrow's index (0-6)
+
+    const rotated = [...days.slice(startIndex), ...days.slice(0, startIndex)];
+    return rotated;
 };
 
 /**
