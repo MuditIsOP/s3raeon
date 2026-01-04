@@ -69,17 +69,39 @@ const Stats = () => {
                 const newPhotos = await Promise.all(entry.photos.map(async (p) => {
                     if (p.size) return p;
                     try {
-                        // Assuming p.url is the key. If it's a full URL, we might need to parse or just try HEAD on key
-                        // The app stores keys usually "photos/..."
+                        let key = p.url;
+                        // Extract Key if it is a full URL
+                        if (key.startsWith('http')) {
+                            // Try to split by bucket name
+                            const bucketPart = `/${bucket}/`;
+                            if (key.includes(bucketPart)) {
+                                key = key.split(bucketPart)[1].split('?')[0]; // Remove query params if any
+                            } else {
+                                // Fallback: try to guess standard Storj/S3 format (last parts)
+                                // This is risky if we don't know the structure, but usually safe for "photos/..."
+                                const parts = key.split('/');
+                                const photoIndex = parts.indexOf('photos');
+                                if (photoIndex !== -1) {
+                                    key = parts.slice(photoIndex).join('/').split('?')[0];
+                                } else {
+                                    // If we can't determine key, skip
+                                    console.warn("Could not extract key from URL:", key);
+                                    return p;
+                                }
+                            }
+                        }
+
+                        // Decode URI components in case spaces/special chars are encoded
+                        key = decodeURIComponent(key);
+
                         const command = new HeadObjectCommand({
                             Bucket: bucket,
-                            Key: p.url
+                            Key: key
                         });
                         const response = await s3Client.send(command);
-                        // console.log("Fetched size for", p.url, response.ContentLength);
                         return { ...p, size: response.ContentLength };
                     } catch (err) {
-                        console.warn("Failed to fetch size for", p.url);
+                        console.warn("Failed to fetch size for", p.url, err);
                         return p;
                     }
                 }));
