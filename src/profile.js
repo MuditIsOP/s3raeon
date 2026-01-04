@@ -1,15 +1,23 @@
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-const BUCKET_NAME = 'arshita-diary';
-const ENDPOINT = 'https://gateway.storjshare.io';
+// Use same config as storj.js - env vars have the working credentials
+const STORJ_CONFIG = {
+    accessKeyId: import.meta.env.VITE_STORJ_ACCESS_KEY,
+    secretAccessKey: import.meta.env.VITE_STORJ_SECRET_KEY,
+    endpoint: import.meta.env.VITE_STORJ_ENDPOINT || 'https://gateway.storjshare.io',
+    bucket: import.meta.env.VITE_STORJ_BUCKET || 'arshita-diary',
+    region: 'us-east-1',
+};
+
+const BUCKET_NAME = STORJ_CONFIG.bucket;
 
 const s3Client = new S3Client({
-    endpoint: ENDPOINT,
-    region: 'us-east-1',
+    endpoint: STORJ_CONFIG.endpoint,
+    region: STORJ_CONFIG.region,
     credentials: {
-        accessKeyId: 'jvpikdtk2ueqylglupmzlpg6mvqa',
-        secretAccessKey: 'jz6zn4h5tw22342g5taa6j7w4ugkrfacuikfrkf7wbv5jxywtuxmi',
+        accessKeyId: STORJ_CONFIG.accessKeyId,
+        secretAccessKey: STORJ_CONFIG.secretAccessKey,
     },
     forcePathStyle: true,
 });
