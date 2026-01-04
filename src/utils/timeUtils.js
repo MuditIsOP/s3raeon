@@ -3,10 +3,22 @@ import { DateTime } from 'luxon';
 // IST timezone
 const IST_ZONE = 'Asia/Kolkata';
 
+// ============================================
+// TIME OVERRIDE SETTINGS
+// Set USE_HARDCODED_TIME to true to use the date below
+// Set to false for live time
+// ============================================
+const USE_HARDCODED_TIME = true;
+const HARDCODED_DATE = { year: 2026, month: 1, day: 4, hour: 23, minute: 55 };
+// ============================================
+
 /**
  * Get current time in IST
  */
 export const getCurrentIST = () => {
+    if (USE_HARDCODED_TIME) {
+        return DateTime.fromObject(HARDCODED_DATE, { zone: IST_ZONE });
+    }
     return DateTime.now().setZone(IST_ZONE);
 };
 
