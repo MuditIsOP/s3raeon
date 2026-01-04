@@ -118,6 +118,9 @@ function Gallery() {
                         photo={selectedPhoto}
                         onClose={() => setSelectedPhoto(null)}
                         onStar={() => handleStar(selectedPhoto)}
+                        allPhotos={allPhotos}
+                        currentIndex={allPhotos.findIndex(p => p.date === selectedPhoto.date && p.index === selectedPhoto.index)}
+                        onNavigate={(newIndex) => setSelectedPhoto(allPhotos[newIndex])}
                     />
                 )}
             </AnimatePresence>
@@ -142,16 +145,31 @@ function PhotoTile({ photo, onClick, onLongPress }) {
     );
 }
 
-function PhotoModal({ photo, onClose, onStar }) {
+function PhotoModal({ photo, onClose, onStar, allPhotos, currentIndex, onNavigate }) {
     const handleStarClick = (e) => {
         e.stopPropagation();
         onStar();
     };
 
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex < allPhotos.length - 1;
+
+    const handlePrev = (e) => {
+        e.stopPropagation();
+        if (hasPrev) onNavigate(currentIndex - 1);
+    };
+
+    const handleNext = (e) => {
+        e.stopPropagation();
+        if (hasNext) onNavigate(currentIndex + 1);
+    };
+
     return (
         <>
+            {/* Backdrop - clicking closes */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-50" onClick={onClose} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4">
+
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4" onClick={onClose}>
                 {/* Close Button */}
                 <button
                     onClick={onClose}
@@ -163,9 +181,36 @@ function PhotoModal({ photo, onClose, onStar }) {
                     </svg>
                 </button>
 
-                <img src={photo.url} alt="" className="max-w-full max-h-[70vh] object-contain rounded-xl" />
+                {/* Left Arrow */}
+                {hasPrev && (
+                    <button
+                        onClick={handlePrev}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                        style={{ background: 'rgba(255,255,255,0.1)' }}
+                    >
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                )}
 
-                <div className="mt-4 flex items-center gap-4">
+                {/* Right Arrow */}
+                {hasNext && (
+                    <button
+                        onClick={handleNext}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                        style={{ background: 'rgba(255,255,255,0.1)' }}
+                    >
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                )}
+
+                {/* Image - clicking does NOT close */}
+                <img src={photo.url} alt="" className="max-w-full max-h-[70vh] object-contain rounded-xl" onClick={(e) => e.stopPropagation()} />
+
+                <div className="mt-4 flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
                     <span style={{ color: 'var(--text-muted)' }}>{formatDate(photo.date)}</span>
 
                     <div className="flex items-center gap-2">

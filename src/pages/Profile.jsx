@@ -17,6 +17,7 @@ function Profile() {
         dob: '',
         profilePhotoUrl: null
     });
+    const [originalProfile, setOriginalProfile] = useState(null); // Track original for change detection
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -27,6 +28,15 @@ function Profile() {
     const [securityConfig, setSecurityConfig] = useState(null);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [showSecurityModal, setShowSecurityModal] = useState(false);
+
+    // Check if there are unsaved changes
+    const hasChanges = originalProfile && (
+        profile.firstName !== originalProfile.firstName ||
+        profile.lastName !== originalProfile.lastName ||
+        profile.email !== originalProfile.email ||
+        profile.mobile !== originalProfile.mobile ||
+        profile.dob !== originalProfile.dob
+    );
 
     useEffect(() => {
         loadData();
@@ -40,6 +50,7 @@ function Profile() {
                 loadConfig()
             ]);
             setProfile(profileData);
+            setOriginalProfile(profileData); // Store original for comparison
             setSecurityConfig(configData);
         } catch (error) {
             console.error('Error loading data:', error);
@@ -49,14 +60,18 @@ function Profile() {
     };
 
     const handleSave = async () => {
+        if (!hasChanges) return;
         setSaving(true);
         try {
             await saveProfile(profile);
+            setOriginalProfile(profile); // Update original after save
             setMessage({ type: 'success', text: 'Profile updated' });
-            setTimeout(() => setMessage(null), 3000);
+            setTimeout(() => {
+                setMessage(null);
+                navigate(-1); // Go back to previous page
+            }, 1000);
         } catch (error) {
             setMessage({ type: 'error', text: 'Failed to save' });
-        } finally {
             setSaving(false);
         }
     };
@@ -241,10 +256,10 @@ function Profile() {
 
                     <button
                         onClick={handleSave}
-                        disabled={saving}
-                        className="btn-primary"
+                        disabled={saving || !hasChanges}
+                        className={`w-full py-3 rounded-xl font-semibold transition-all ${hasChanges ? 'btn-primary' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] cursor-not-allowed'}`}
                     >
-                        {saving ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Saving...</span> : 'Save Changes'}
+                        {saving ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Saving...</span> : 'Save Changes'}
                     </button>
                 </div>
             </div>
