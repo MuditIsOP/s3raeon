@@ -21,8 +21,8 @@ function Gallery() {
     const [sortOrder, setSortOrder] = useState('desc'); // 'asc' | 'desc'
     const [groupMode, setGroupMode] = useState('day'); // 'day' | 'month'
 
-    const { allPhotos, favorites, groupedPhotos } = useMemo(() => {
-        const all = [], favs = [], groups = {};
+    const { allPhotos, favorites, groupedPhotos, groupedFavorites } = useMemo(() => {
+        const all = [], favs = [], groups = {}, favGroups = {};
         Object.entries(entries).forEach(([date, entry]) => {
             if (entry.photos) {
                 if (moodFilter && entry.mood !== moodFilter) return;
@@ -30,7 +30,6 @@ function Gallery() {
                 entry.photos.forEach((photo, index) => {
                     const photoData = { ...photo, date, index, dayOfMonth: getDayOfMonth(date), mood: entry.mood, journal: entry.journal };
                     all.push(photoData);
-                    if (photo.starred) favs.push(photoData);
 
                     // Grouping Logic
                     let groupKey, groupLabel;
@@ -42,8 +41,16 @@ function Gallery() {
                         groupLabel = DateTime.fromISO(date).toFormat('MMMM yyyy');
                     }
 
+                    // Add to All Photos Groups
                     if (!groups[groupKey]) groups[groupKey] = { label: groupLabel, photos: [] };
                     groups[groupKey].photos.push(photoData);
+
+                    // Add to Favorites Groups
+                    if (photo.starred) {
+                        favs.push(photoData);
+                        if (!favGroups[groupKey]) favGroups[groupKey] = { label: groupLabel, photos: [] };
+                        favGroups[groupKey].photos.push(photoData);
+                    }
                 });
             }
         });
@@ -54,8 +61,9 @@ function Gallery() {
         all.sort(compare);
         favs.sort(compare);
         Object.values(groups).forEach(g => g.photos.sort(compare));
+        Object.values(favGroups).forEach(g => g.photos.sort(compare));
 
-        return { allPhotos: all, favorites: favs, groupedPhotos: groups };
+        return { allPhotos: all, favorites: favs, groupedPhotos: groups, groupedFavorites: favGroups };
     }, [entries, moodFilter, sortOrder, groupMode]);
 
     // ... (rest of handlers) ...
@@ -165,9 +173,16 @@ function Gallery() {
                                 <p style={{ color: 'var(--text-secondary)' }}>No favorites yet</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-3 gap-1">
-                                {favorites.map((photo) => <PhotoTile key={`${photo.date}-${photo.index}`} photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />)}
-                            </div>
+                            Object.entries(groupedFavorites)
+                                .sort(([a], [b]) => sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a))
+                                .map(([key, { label, photos }]) => (
+                                    <div key={key} className="mb-6">
+                                        <p className="text-label mb-3 sticky top-0 bg-[var(--bg)]/80 backdrop-blur-sm z-10 py-2">{label}</p>
+                                        <div className="grid grid-cols-3 gap-1">
+                                            {photos.map((photo) => <PhotoTile key={`${photo.date}-${photo.index}`} photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />)}
+                                        </div>
+                                    </div>
+                                ))
                         )}
                     </motion.div>
                 ) : (
