@@ -1,18 +1,6 @@
-import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
-const BUCKET_NAME = 'arshita-diary';
-const ENDPOINT = 'https://gateway.storjshare.io';
-
-const s3Client = new S3Client({
-    endpoint: ENDPOINT,
-    region: 'us-east-1',
-    credentials: {
-        accessKeyId: 'jvpikdtk2ueqylglupmzlpg6mvqa',
-        secretAccessKey: 'jz6zn4h5tw22342g5taa6j7w4ugkrfacuikfrkf7wbv5jxywtuxmi',
-    },
-    forcePathStyle: true,
-});
+import { s3Client, BUCKET_NAME } from './storj';
 
 // Default profile
 const DEFAULT_PROFILE = {
