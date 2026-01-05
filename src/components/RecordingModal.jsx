@@ -199,10 +199,10 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
                                 </span>
                                 <p
                                     ref={textRef}
-                                    className="font-serif italic text-[var(--text)] px-2 w-full flex items-center justify-center transition-all duration-200"
+                                    className="font-serif italic text-[var(--text)] px-2 w-full"
                                     style={{
                                         lineHeight: '1.4',
-                                        whiteSpace: 'pre-wrap' // Preserve structure but allow wrapping
+                                        whiteSpace: 'pre-wrap'
                                     }}
                                 >
                                     "{affirmation}"
