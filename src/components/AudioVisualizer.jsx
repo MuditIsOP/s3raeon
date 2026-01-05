@@ -74,8 +74,10 @@ function AudioVisualizer({ stream, audioRef, isRecording, isPlaying }) {
                 const value = sum / step;
 
                 // Scale height with boost for quiet sounds
+                // Reduced multiplier to prevent clipping (1.5 -> 1.2)
                 const percent = value / 255;
-                const barHeight = Math.max(4, height * percent * 1.5);
+                // Clamp max height to 70% of container to ensure headroom ("few space before border")
+                const barHeight = Math.max(4, Math.min(height * percent * 1.2, height * 0.7));
 
                 // Draw Mirrored Bars (Left and Right from Center)
                 const xRight = centerX + i * (barWidth + 2);
