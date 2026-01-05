@@ -214,3 +214,110 @@ export const saveConfig = async (config) => {
         throw error;
     }
 };
+
+/**
+ * Sync photos from Storj bucket to entries.json
+ * Scans the bucket, finds missing photos, restores them with file sizes
+ */
+export const syncPhotosFromBucket = async () => {
+    console.log('🔍 Syncing photos from bucket...');
+
+    // 1. List all photos in bucket
+    const bucketPhotos = [];
+    let continuationToken = undefined;
+
+    do {
+        const listCommand = new ListObjectsV2Command({
+            Bucket: BUCKET_NAME,
+            Prefix: 'photos/',
+            ContinuationToken: continuationToken,
+        });
+
+        const response = await s3Client.send(listCommand);
+
+        if (response.Contents) {
+            for (const item of response.Contents) {
+                // Key format: photos/YYYY-MM-DD/timestamp.jpg
+                const match = item.Key.match(/^photos\/(\d{4}-\d{2}-\d{2})\/(.+)$/);
+                if (match) {
+                    bucketPhotos.push({
+                        key: item.Key,
+                        date: match[1],
+                        filename: match[2],
+                        size: item.Size,
+                        lastModified: item.LastModified,
+                    });
+                }
+            }
+        }
+
+        continuationToken = response.NextContinuationToken;
+    } while (continuationToken);
+
+    console.log(`📸 Found ${bucketPhotos.length} photos in bucket`);
+
+    // 2. Load current entries
+    const entries = await loadEntries();
+
+    // 3. Group photos by date
+    const photosByDate = {};
+    for (const photo of bucketPhotos) {
+        if (!photosByDate[photo.date]) {
+            photosByDate[photo.date] = [];
+        }
+        photosByDate[photo.date].push(photo);
+    }
+
+    // 4. Restore missing photos
+    let restoredCount = 0;
+    let updatedCount = 0;
+
+    for (const [date, datePhotos] of Object.entries(photosByDate)) {
+        if (!entries[date]) {
+            entries[date] = {};
+        }
+
+        const existingPhotos = entries[date].photos || [];
+        const existingKeys = new Set(existingPhotos.map(p => p.key).filter(Boolean));
+
+        for (const photo of datePhotos) {
+            const existingPhoto = existingPhotos.find(p => p.key === photo.key);
+
+            if (!existingPhoto && !existingKeys.has(photo.key)) {
+                // Photo in bucket but not in entries - restore it!
+                console.log(`  ➕ Restoring ${photo.key}`);
+
+                const url = await getPresignedUrl(photo.key);
+
+                existingPhotos.push({
+                    url: url,
+                    key: photo.key,
+                    size: photo.size,
+                    uploadedAt: photo.lastModified?.toISOString() || new Date().toISOString(),
+                    starred: false,
+                });
+                restoredCount++;
+            } else if (existingPhoto && !existingPhoto.size) {
+                // Update size if missing
+                existingPhoto.size = photo.size;
+                updatedCount++;
+            }
+        }
+
+        entries[date].photos = existingPhotos;
+    }
+
+    // 5. Save if changes made
+    if (restoredCount > 0 || updatedCount > 0) {
+        await saveEntries(entries);
+    }
+
+    console.log(`✅ Restored ${restoredCount}, updated sizes for ${updatedCount}`);
+
+    return {
+        restoredCount,
+        updatedCount,
+        totalPhotosInBucket: bucketPhotos.length,
+        entries, // Return updated entries for UI refresh
+    };
+};
