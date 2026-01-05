@@ -112,23 +112,19 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <>
-                    {/* Backdrop */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200]"
-                        onClick={onClose}
-                    />
-
-                    {/* Modal Content */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6 bg-black/80 backdrop-blur-sm"
+                    onClick={onClose}
+                >
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        // Consistent height management for mobile vs desktop
-                        className="fixed inset-4 bottom-8 md:inset-auto md:w-[90vw] md:max-w-xl md:h-[80vh] md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 bg-[var(--bg-card)] rounded-2xl z-[201] flex flex-col overflow-hidden border border-[var(--border)] shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full h-[85vh] md:h-auto md:max-h-[85vh] md:max-w-xl bg-[var(--bg-card)] rounded-2xl flex flex-col overflow-hidden border border-[var(--border)] shadow-2xl relative"
                     >
                         {/* Header */}
                         <div className="relative z-20 px-4 py-3 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-card)] shadow-sm">
@@ -169,14 +165,14 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
                                     {formatTime(recordingTime)}
                                 </div>
 
-                                {/* Centered Visualizer (No longer behind buttons) */}
-                                <div className="h-12 w-full flex items-center justify-center my-1">
+                                {/* Centered Visualizer (Full Width) */}
+                                <div className="h-16 w-full flex items-center justify-center my-1 px-4">
                                     {recordingStream ? (
-                                        <div className="w-full max-w-[200px]">
-                                            <AudioVisualizer stream={recordingStream} isRecording={true} height={48} />
+                                        <div className="w-full">
+                                            <AudioVisualizer stream={recordingStream} isRecording={true} height={64} />
                                         </div>
                                     ) : (
-                                        <div className="h-1 w-16 bg-[var(--border)] rounded-full opacity-50" />
+                                        <div className="h-1 w-24 bg-[var(--border)] rounded-full opacity-50" />
                                     )}
                                 </div>
 
@@ -225,7 +221,7 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
                             </div>
                         </div>
                     </motion.div>
-                </>
+                </motion.div>
             )}
         </AnimatePresence>,
         document.body
