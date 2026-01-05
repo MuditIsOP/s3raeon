@@ -10,6 +10,42 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
     const [recordingStream, setRecordingStream] = useState(null);
     const [failedPermission, setFailedPermission] = useState(false);
 
+    // Auto-scaling text logic
+    const textRef = useRef(null);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const adjustFontSize = () => {
+            const container = containerRef.current;
+            const text = textRef.current;
+            if (!container || !text) return;
+
+            // Reset to max size first to measure correctly
+            let currentSize = 32; // Max font size in pixels (2rem)
+            text.style.fontSize = `${currentSize}px`;
+            text.style.lineHeight = '1.4';
+
+            // Simple loop to fit within container height and width
+            while (
+                (text.scrollHeight > container.clientHeight || text.scrollWidth > container.clientWidth) &&
+                currentSize > 12 // Min size
+            ) {
+                currentSize -= 1;
+                text.style.fontSize = `${currentSize}px`;
+            }
+        };
+
+        // Run on open and affirmation change
+        if (isOpen) {
+            // Small timeout to allow layout to settle
+            setTimeout(adjustFontSize, 0);
+        }
+
+        window.addEventListener('resize', adjustFontSize);
+        return () => window.removeEventListener('resize', adjustFontSize);
+    }, [affirmation, isOpen]);
+
+
     // Refs for Recorder
     const mediaRecorderRef = useRef(null);
     const streamRef = useRef(null);
@@ -138,17 +174,17 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
                         </div>
 
                         {/* Main Content: Auto-scaling Affirmation */}
-                        {/* justify-start + my-auto ensures vertically centered if space permits, but top-aligned if scrolling needed */}
-                        <div className="flex-1 flex flex-col justify-start p-6 text-center bg-primary/5 min-h-0 overflow-y-auto">
-                            <div className="w-full max-w-md mx-auto my-auto">
-                                <span className="text-[10px] md:text-xs font-bold text-primary uppercase tracking-wider mb-2 md:mb-4 block opacity-70">
+                        <div ref={containerRef} className="flex-1 flex flex-col justify-center items-center p-6 text-center bg-primary/5 min-h-0 overflow-hidden w-full">
+                            <div className="w-full max-w-lg mx-auto flex flex-col justify-center h-full">
+                                <span className="text-[10px] md:text-xs font-bold text-primary uppercase tracking-wider mb-2 md:mb-4 block opacity-70 shrink-0">
                                     Today's Affirmation
                                 </span>
                                 <p
-                                    className="font-serif italic text-[var(--text)] leading-relaxed px-2"
+                                    ref={textRef}
+                                    className="font-serif italic text-[var(--text)] px-2 w-full flex items-center justify-center transition-all duration-200"
                                     style={{
-                                        fontSize: 'clamp(1rem, 3.5vw, 1.8rem)', // Smaller clamp for better fit
-                                        lineHeight: '1.5'
+                                        lineHeight: '1.4',
+                                        whiteSpace: 'pre-wrap' // Preserve structure but allow wrapping
                                     }}
                                 >
                                     "{affirmation}"
