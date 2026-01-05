@@ -128,17 +128,36 @@ export async function loadEntries() {
 }
 
 /**
- * Save a single entry
+ * Mutex lock for saveEntry to prevent race conditions.
+ * All saves queue behind this promise.
+ */
+let saveLock = Promise.resolve();
+
+/**
+ * Save a single entry (with mutex to prevent race conditions)
+ * Critical: Each save waits for the previous to complete,
+ * ensuring we always load the latest data before merging.
  */
 export async function saveEntry(dateStr, entryData) {
-    const entries = await loadEntries();
-    entries[dateStr] = {
-        ...entries[dateStr],
-        ...entryData,
-        updatedAt: new Date().toISOString(),
-    };
-    await saveEntries(entries);
-    return entries;
+    // Chain this save operation behind any pending saves
+    const saveOperation = saveLock.then(async () => {
+        const entries = await loadEntries();
+        entries[dateStr] = {
+            ...entries[dateStr],
+            ...entryData,
+            updatedAt: new Date().toISOString(),
+        };
+        await saveEntries(entries);
+        return entries;
+    }).catch(error => {
+        console.error('Error in saveEntry:', error);
+        throw error;
+    });
+
+    // Update the lock to point to this operation
+    saveLock = saveOperation.catch(() => { }); // Prevent unhandled rejection if this fails
+
+    return saveOperation;
 }
 
 /**
