@@ -14,36 +14,53 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
     const textRef = useRef(null);
     const containerRef = useRef(null);
 
-    // useLayoutEffect prevents flicker and ensures we measure after DOM paint but before display
     useLayoutEffect(() => {
+        const container = containerRef.current;
+        const text = textRef.current;
+        if (!container || !text) return;
+
         const adjustFontSize = () => {
-            const container = containerRef.current;
-            const text = textRef.current;
-            if (!container || !text) return;
+            // Binary Search for the perfect fit
+            // Range: 12px (min readable) to 60px (nice and big)
+            let min = 12;
+            let max = 60;
+            let optimal = 12;
 
-            // Start big (3rem = ~48px)
-            let currentSize = 48;
-            text.style.fontSize = `${currentSize}px`;
-            text.style.lineHeight = '1.4'; // Match JSX style
+            // Preserve current content to avoid flickering during measurement logic if possible, 
+            // but we must mutate styles to measure.
 
-            // Loop until it fits inside both dimensions
-            // We use a small buffer (5px) to be safe
-            while (
-                (text.scrollHeight > container.clientHeight || text.scrollWidth > container.clientWidth) &&
-                currentSize > 12 // Minimum readable size
-            ) {
-                currentSize -= 1;
-                text.style.fontSize = `${currentSize}px`;
+            while (min <= max) {
+                const mid = Math.floor((min + max) / 2);
+                text.style.fontSize = `${mid}px`;
+                text.style.lineHeight = '1.4';
+
+                // Check fits with a small buffer
+                const fits =
+                    text.scrollHeight <= container.clientHeight &&
+                    text.scrollWidth <= container.clientWidth;
+
+                if (fits) {
+                    optimal = mid;
+                    min = mid + 1; // Try larger
+                } else {
+                    max = mid - 1; // Too big
+                }
             }
+
+            // Apply optimal size
+            text.style.fontSize = `${optimal}px`;
         };
 
-        if (isOpen) {
-            adjustFontSize();
-        }
+        const observer = new ResizeObserver(() => {
+            // Debounce slightly or just run? ResizeObserver is efficient.
+            // RequestAnimationFrame ensures we don't cause loop errors.
+            requestAnimationFrame(adjustFontSize);
+        });
 
-        // Re-run on resize
-        window.addEventListener('resize', adjustFontSize);
-        return () => window.removeEventListener('resize', adjustFontSize);
+        observer.observe(container);
+        adjustFontSize(); // Initial run
+
+        return () => observer.disconnect();
     }, [affirmation, isOpen]);
 
 
