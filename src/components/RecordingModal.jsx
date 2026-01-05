@@ -35,8 +35,11 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
                 // Critical Fix: Check if the CONTAINER overflows, not just if text fits container height.
                 // The container has other elements (Header span), so checking text.height <= container.height is wrong.
                 // container.scrollHeight > container.clientHeight means something is overflowing.
+
+                // We add a safety buffer (32px) to ensure it doesn't touch the edges/header
+                const safetyBuffer = 32;
                 const hasOverflow =
-                    container.scrollHeight > container.clientHeight ||
+                    container.scrollHeight > (container.clientHeight - safetyBuffer) ||
                     container.scrollWidth > container.clientWidth;
 
                 if (!hasOverflow) {
@@ -193,7 +196,7 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
 
                         {/* Main Content: Auto-scaling Affirmation */}
                         <div ref={containerRef} className="flex-1 flex flex-col justify-center items-center p-6 text-center bg-primary/5 min-h-0 overflow-hidden w-full">
-                            <div className="w-full max-w-lg mx-auto flex flex-col justify-center h-full">
+                            <div className="w-full max-w-lg mx-auto flex flex-col justify-center">
                                 <span className="text-[10px] md:text-xs font-bold text-primary uppercase tracking-wider mb-2 md:mb-4 block opacity-70 shrink-0">
                                     Today's Affirmation
                                 </span>
