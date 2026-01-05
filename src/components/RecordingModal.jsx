@@ -162,17 +162,24 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation, journalText }) {
                         </div>
 
                         {/* Footer: Recording Controls - Always Visible */}
-                        <div className="shrink-0 z-20 p-4 md:p-6 border-t border-[var(--border)] bg-[var(--bg-elevated)] relative">
-                            {/* Visualizer Background */}
-                            <div className="absolute inset-0 opacity-20 pointer-events-none">
-                                {recordingStream && <AudioVisualizer stream={recordingStream} isRecording={true} height={80} />}
-                            </div>
+                        <div className="shrink-0 z-20 p-4 md:p-6 border-t border-[var(--border)] bg-[var(--bg-elevated)] relative flex flex-col items-center">
 
-                            <div className="relative z-10 flex flex-col items-center gap-3 md:gap-4">
+                            <div className="relative z-10 flex flex-col items-center gap-3 w-full max-w-md">
+                                {/* Timer */}
                                 <div className="text-2xl md:text-3xl font-mono font-bold font-variant-numeric tabular-nums tracking-wider text-white drop-shadow-lg">
                                     {formatTime(recordingTime)}
                                 </div>
-                                {/* Removed "Keep going" text as requested */}
+
+                                {/* Centered Visualizer (No longer behind buttons) */}
+                                <div className="h-12 w-full flex items-center justify-center my-1">
+                                    {recordingStream ? (
+                                        <div className="w-full max-w-[200px]">
+                                            <AudioVisualizer stream={recordingStream} isRecording={true} height={48} />
+                                        </div>
+                                    ) : (
+                                        <div className="h-1 w-16 bg-[var(--border)] rounded-full opacity-50" />
+                                    )}
+                                </div>
 
                                 {!recordingStream ? (
                                     <button
