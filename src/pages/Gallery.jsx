@@ -19,7 +19,7 @@ function Gallery() {
     const [activeTab, setActiveTab] = useState('all');
     const [moodFilter, setMoodFilter] = useState(null);
     const [sortOrder, setSortOrder] = useState('desc'); // 'asc' | 'desc'
-    const [groupMode, setGroupMode] = useState('day'); // 'day' | 'month'
+    const [groupMode, setGroupMode] = useState('month'); // 'day' | 'month'
 
     const { allPhotos, favorites, groupedPhotos, groupedFavorites } = useMemo(() => {
         const all = [], favs = [], groups = {}, favGroups = {};
