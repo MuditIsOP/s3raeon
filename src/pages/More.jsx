@@ -166,6 +166,26 @@ function More() {
         }
     };
 
+    // Helper to get text around the match
+    const getSmartSnippet = (text, query) => {
+        if (!query.trim() || !text) return text;
+        const lowerText = text.toLowerCase();
+        const lowerQuery = query.toLowerCase();
+        const index = lowerText.indexOf(lowerQuery);
+
+        if (index === -1) return text; // Should not happen if filtered correctly
+
+        // Designate context window (e.g., 30 chars before, 100 after)
+        const start = Math.max(0, index - 30);
+        const end = Math.min(text.length, index + 100);
+
+        let snippet = text.slice(start, end);
+        if (start > 0) snippet = '...' + snippet;
+        if (end < text.length) snippet = snippet + '...';
+
+        return snippet;
+    };
+
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="page">
             <Header title="More" />
@@ -243,11 +263,13 @@ function More() {
                                 fontStyle: (isVoiceMode ? r.affirmation : r.excerpt) ? 'normal' : 'italic'
                             }}>
                                 {(() => {
-                                    const text = isVoiceMode ? (r.affirmation || "Affirmation not recorded") : (r.excerpt || "Journal not written yet");
-                                    if (!searchQuery?.trim()) return text;
+                                    const fullText = isVoiceMode ? (r.affirmation || "Affirmation not recorded") : (r.excerpt || "Journal not written yet");
+                                    if (!searchQuery?.trim()) return fullText;
 
-                                    // Highlight logic
-                                    const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
+                                    const snippet = getSmartSnippet(fullText, searchQuery);
+
+                                    // Highlight logic on snippet
+                                    const parts = snippet.split(new RegExp(`(${searchQuery})`, 'gi'));
                                     return parts.map((part, i) =>
                                         part.toLowerCase() === searchQuery.toLowerCase() ?
                                             <span key={i} className="bg-yellow-500/30 text-yellow-200 rounded px-0.5">{part}</span> : part
