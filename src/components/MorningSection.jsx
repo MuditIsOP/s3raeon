@@ -254,7 +254,6 @@ function MorningSection({ todayEntry, isUnlocked }) {
                 onClose={() => setShowRecordingModal(false)}
                 onSave={handleModalSave}
                 affirmation={affirmation}
-                journalText={todayEntry?.journal}
             />
 
             {/* Retake Confirmation Sheet */}

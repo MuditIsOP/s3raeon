@@ -133,37 +133,27 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation, journalText }) {
                         {/* Header */}
                         <div className="p-4 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-card)]">
                             <div>
-                                <h3 className="font-bold text-lg text-gradient">Voice Journey</h3>
-                                <p className="text-xs text-[var(--text-muted)]">Read aloud while recording</p>
+                                <h3 className="font-bold text-lg text-gradient">Record Voice Affirmation</h3>
+                                <p className="text-xs text-[var(--text-muted)]">Read the affirmation aloud</p>
                             </div>
                             <button onClick={onClose} className="p-2 rounded-full hover:bg-[var(--bg-elevated)] transition-colors">
                                 <svg className="w-6 h-6 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
 
-                        {/* Scrollable Body: Text Content */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            {/* Affirmation Card */}
-                            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                                <span className="text-xs font-bold text-primary uppercase tracking-wider mb-2 block">Today's Affirmation</span>
-                                <p className="text-lg font-serif italic text-[var(--text)]">"{affirmation}"</p>
-                            </div>
-
-                            {/* Journal Text */}
-                            <div className="space-y-2">
-                                <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider block">Your Journal</span>
-                                <p className="text-base text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
-                                    {journalText || "No journal entry written yet..."}
+                        {/* Main Content: Just Affirmation (Centered) */}
+                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-primary/5">
+                            <div className="max-w-md">
+                                <span className="text-xs font-bold text-primary uppercase tracking-wider mb-4 block opacity-70">Today's Affirmation</span>
+                                <p className="text-2xl md:text-3xl font-serif italic text-[var(--text)] leading-relaxed">
+                                    "{affirmation}"
                                 </p>
                             </div>
-
-                            {/* Spacer for bottom scrolling */}
-                            <div className="h-32"></div>
                         </div>
 
                         {/* Footer: Recording Controls */}
                         <div className="shrink-0 p-6 border-t border-[var(--border)] bg-[var(--bg-elevated)] relative">
-                            {/* Visualizer (Background of footer?) or Compact? Let's keep it prominent but constrained */}
+                            {/* Visualizer Background */}
                             <div className="absolute inset-0 opacity-20 pointer-events-none">
                                 {recordingStream && <AudioVisualizer stream={recordingStream} isRecording={true} height={100} />}
                             </div>
@@ -188,25 +178,40 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation, journalText }) {
                                         Start Recording
                                     </button>
                                 ) : (
-                                    <button
-                                        onClick={handleFinish}
-                                        className={`
-                                            w-full max-w-xs py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all
-                                            ${recordingTime < MIN_RECORDING_SECONDS
-                                                ? 'bg-gray-600 text-gray-300 cursor-not-allowed opacity-80'
-                                                : 'bg-green-500 hover:bg-green-600 text-white shadow-green-500/30'}
-                                        `}
-                                        disabled={recordingTime < MIN_RECORDING_SECONDS}
-                                    >
-                                        {recordingTime < MIN_RECORDING_SECONDS ? (
-                                            <>Recording...</>
-                                        ) : (
-                                            <>
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                                Finish & Save
-                                            </>
-                                        )}
-                                    </button>
+                                    <div className="flex gap-3 w-full max-w-xs">
+                                        {/* Stop/Cancel Button (Only if < 60s or purely for cancel) */}
+                                        <button
+                                            onClick={() => {
+                                                stopNativeRecording();
+                                                setRecordingTime(0); // Reset UI
+                                            }}
+                                            className="flex-1 py-4 rounded-xl font-medium text-sm bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                            Stop
+                                        </button>
+
+                                        {/* Finish Button */}
+                                        <button
+                                            onClick={handleFinish}
+                                            disabled={recordingTime < MIN_RECORDING_SECONDS}
+                                            className={`
+                                                flex-[2] py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all
+                                                ${recordingTime < MIN_RECORDING_SECONDS
+                                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed border border-gray-600'
+                                                    : 'bg-green-500 hover:bg-green-600 text-white shadow-green-500/30'}
+                                            `}
+                                        >
+                                            {recordingTime < MIN_RECORDING_SECONDS ? (
+                                                <span className="opacity-50">Saving locked...</span>
+                                            ) : (
+                                                <>
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                                    Finish
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>
