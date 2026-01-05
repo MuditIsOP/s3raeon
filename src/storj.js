@@ -38,6 +38,7 @@ export async function uploadFile(key, file, contentType) {
         Key: key,
         Body: new Uint8Array(arrayBuffer),
         ContentType: contentType,
+        CacheControl: 'no-cache, no-store, must-revalidate',
     });
 
     await s3Client.send(putCommand);
@@ -75,6 +76,7 @@ export async function getPresignedUrl(key) {
     const command = new GetObjectCommand({
         Bucket: BUCKET_NAME,
         Key: key,
+        ResponseCacheControl: 'no-cache, no-store, must-revalidate',
     });
     return getSignedUrl(s3Client, command, { expiresIn: 604800 });
 }
@@ -96,6 +98,7 @@ export async function saveEntries(entries) {
         Key: ENTRIES_KEY,
         Body: json,
         ContentType: 'application/json',
+        CacheControl: 'no-cache, no-store, must-revalidate',
     });
 
     await s3Client.send(command);
@@ -109,6 +112,7 @@ export async function loadEntries() {
         const command = new GetObjectCommand({
             Bucket: BUCKET_NAME,
             Key: ENTRIES_KEY,
+            ResponseCacheControl: 'no-cache, no-store, must-revalidate',
         });
 
         const response = await s3Client.send(command);
@@ -160,6 +164,7 @@ export const loadConfig = async () => {
         const command = new GetObjectCommand({
             Bucket: STORJ_CONFIG.bucket,
             Key: 'data/config.json',
+            ResponseCacheControl: 'no-cache, no-store, must-revalidate',
         });
         const response = await s3Client.send(command);
         const str = await response.Body.transformToString();
@@ -181,6 +186,7 @@ export const saveConfig = async (config) => {
             Key: 'data/config.json',
             Body: JSON.stringify(config),
             ContentType: 'application/json',
+            CacheControl: 'no-cache, no-store, must-revalidate',
         });
         await s3Client.send(command);
         return true;
