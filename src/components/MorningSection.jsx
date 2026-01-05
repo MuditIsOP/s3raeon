@@ -5,6 +5,7 @@ import { getTodayIST, getDayOfMonth } from '../utils/timeUtils';
 import { uploadAudio } from '../storj';
 import affirmations from '../data/affirmations.json';
 import AudioVisualizer from './AudioVisualizer';
+import RecordingModal from './RecordingModal';
 
 const MIN_RECORDING_SECONDS = 60;
 
@@ -14,124 +15,27 @@ function MorningSection({ todayEntry, isUnlocked }) {
     const dayOfMonth = getDayOfMonth();
     const affirmation = affirmations[dayOfMonth] || affirmations['1'];
 
-    const [isRecording, setIsRecording] = useState(false);
-    const [recordingTime, setRecordingTime] = useState(0);
+    // Playback State
     const [audioUrl, setAudioUrl] = useState(todayEntry?.audioUrl || null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [uploadingAudio, setUploadingAudio] = useState(false);
-    const [tooShort, setTooShort] = useState(false);
 
-    // Native Recorder Refs
-    const mediaRecorderRef = useRef(null);
-    const streamRef = useRef(null);
-    const chunksRef = useRef([]);
-    const [recordingStream, setRecordingStream] = useState(null);
+    // Recording Modal State
+    const [showRecordingModal, setShowRecordingModal] = useState(false);
 
     const audioRef = useRef(null);
-    const timerRef = useRef(null);
 
     useEffect(() => { if (todayEntry?.audioUrl) setAudioUrl(todayEntry.audioUrl); }, [todayEntry?.audioUrl]);
 
-    // Clean up stream on unmount
-    useEffect(() => {
-        return () => {
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach(track => track.stop());
-            }
-        };
-    }, []);
-
-    const startNativeRecording = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            streamRef.current = stream;
-            setRecordingStream(stream);
-
-            mediaRecorderRef.current = new MediaRecorder(stream);
-            chunksRef.current = [];
-
-            mediaRecorderRef.current.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    chunksRef.current.push(e.data);
-                }
-            };
-
-            mediaRecorderRef.current.onstop = () => {
-                // If stopped manually and not too short (or handling retry logic)
-                // We'll handle the blob processing in handleStopRecording wrapper
-            };
-
-            mediaRecorderRef.current.start();
-            setIsRecording(true);
-            setTooShort(false);
-        } catch (err) {
-            console.error("Error accessing microphone:", err);
-            alert("Could not access microphone. Please check permissions.");
-        }
-    };
-
-    const stopNativeRecording = () => {
-        if (mediaRecorderRef.current && isRecording) {
-            mediaRecorderRef.current.stop();
-            setIsRecording(false);
-
-            // Stop tracks to release mic
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach(track => track.stop());
-                streamRef.current = null;
-                setRecordingStream(null);
-            }
-        }
-    };
-
-    const processRecording = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' }); // webm is standard for MediaRecorder
-        const url = URL.createObjectURL(blob);
-
-        if (recordingTime >= MIN_RECORDING_SECONDS) {
-            handleUploadAudio(blob, url);
-        } else {
-            setTooShort(true);
-            // URL cleanup? Browser handles it mostly, but good practice to revoke if unused.
-            // But we might want to keep it if user wants to play back? 
-            // Current design deletes it if too short.
-            URL.revokeObjectURL(url);
-        }
-    };
-
-    // Recording timer
-    useEffect(() => {
-        if (isRecording) {
-            setRecordingTime(0);
-            timerRef.current = setInterval(() => {
-                setRecordingTime(t => t + 1);
-            }, 1000);
-        } else {
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-                timerRef.current = null;
-
-                // When timer stops (recording stopped), we process
-                if (mediaRecorderRef.current) {
-                    // Small timeout to ensure onstop fired and chunks gathered
-                    setTimeout(processRecording, 100);
-                }
-            }
-        }
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-        };
-    }, [isRecording]);
-
-    const handleUploadAudio = async (blob, blobUrl) => {
+    const handleUploadAudio = async (blob, durationSecs) => {
         try {
             setUploadingAudio(true);
             const downloadUrl = await uploadAudio(today, blob);
             setAudioUrl(downloadUrl);
             // Save with duration for stats tracking
-            await saveEntry(today, { audioUrl: downloadUrl, audioDuration: recordingTime, morningCompleted: true, affirmation });
+            await saveEntry(today, { audioUrl: downloadUrl, audioDuration: durationSecs, morningCompleted: true, affirmation });
         } catch (error) {
             console.error('Error uploading:', error);
             alert('Upload failed');
@@ -140,17 +44,9 @@ function MorningSection({ todayEntry, isUnlocked }) {
         }
     };
 
-    const handleRecord = () => {
-        if (isRecording) {
-            stopNativeRecording();
-        } else {
-            startNativeRecording();
-        }
-    };
-
-    const handleRetry = () => {
-        setTooShort(false);
-        setRecordingTime(0);
+    const handleModalSave = (blob, duration) => {
+        setShowRecordingModal(false);
+        handleUploadAudio(blob, duration);
     };
 
     const togglePlay = () => {
@@ -329,63 +225,37 @@ function MorningSection({ todayEntry, isUnlocked }) {
                             Locked until 5:00 AM
                         </button>
                     </motion.div>
-                ) : tooShort ? (
-                    <motion.div key="too-short" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-4">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444' }}>
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        </div>
-                        <p className="font-medium mb-1" style={{ color: 'var(--text)' }}>Recording too short</p>
-                        <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Minimum 1 minute required ({formatTime(recordingTime)} recorded)</p>
-                        <button onClick={handleRetry} className="btn-primary">Try Again</button>
-                    </motion.div>
                 ) : (
-                    <motion.div key="record" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-4">
-                        <p className="text-sm italic mb-4 px-2" style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>"{affirmation}"</p>
+                    <motion.div key="start" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-8">
+                        <p className="text-sm italic mb-6 px-4 text-[var(--text-secondary)]">"{affirmation}"</p>
 
-                        {/* Visualizer for Recording */}
-                        <div className="mb-4 relative">
-                            {isRecording && recordingStream ? (
-                                <AudioVisualizer stream={recordingStream} isRecording={true} />
-                            ) : (
-                                <div className="h-16 w-full rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-muted)] text-sm">
-                                    Visualizer will appear here
-                                </div>
-                            )}
-
-                            {/* Timer Overlay */}
-                            {isRecording && (
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <span className="text-2xl font-mono font-bold drop-shadow-md text-white">
-                                        {formatTime(recordingTime)}
-                                    </span>
-                                </div>
-                            )}
+                        <div className="mb-6 flex justify-center">
+                            <div className="w-20 h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center relative">
+                                <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: '3s' }}></div>
+                                <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                            </div>
                         </div>
 
-                        <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>
-                            {isRecording
-                                ? (recordingTime < MIN_RECORDING_SECONDS ? `${MIN_RECORDING_SECONDS - recordingTime}s more needed` : 'Ready to save')
-                                : `Target: ${formatTime(MIN_RECORDING_SECONDS)}`}
-                        </p>
-
-                        <button onClick={handleRecord} disabled={uploadingAudio} className={`record-btn ${isRecording ? 'recording' : ''}`}>
-                            {uploadingAudio ? (
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            ) : isRecording ? (
-                                <div className="w-4 h-4 bg-white rounded" />
-                            ) : (
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-                                    <path d="M19 10v1a7 7 0 0 1-14 0v-1a1 1 0 0 1 2 0v1a5 5 0 0 0 10 0v-1a1 1 0 0 1 2 0z" />
-                                </svg>
-                            )}
+                        <button
+                            onClick={() => setShowRecordingModal(true)}
+                            className="btn-primary w-full max-w-xs mx-auto py-3 text-base shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18l9-9m-9 9l-9-9m9 9v-16" /></svg>
+                            Start Recording Journey
                         </button>
-                        <p className="text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
-                            {uploadingAudio ? 'Saving...' : isRecording ? 'Tap to stop' : 'Tap to record'}
-                        </p>
+                        <p className="text-xs mt-3 text-[var(--text-muted)]">Read the journal & affirmation aloud</p>
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Recording Modal */}
+            <RecordingModal
+                isOpen={showRecordingModal}
+                onClose={() => setShowRecordingModal(false)}
+                onSave={handleModalSave}
+                affirmation={affirmation}
+                journalText={todayEntry?.journal}
+            />
 
             {/* Retake Confirmation Sheet */}
             <AnimatePresence>
