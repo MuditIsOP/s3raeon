@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import AudioVisualizer from './AudioVisualizer';
@@ -14,33 +14,34 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
     const textRef = useRef(null);
     const containerRef = useRef(null);
 
-    useEffect(() => {
+    // useLayoutEffect prevents flicker and ensures we measure after DOM paint but before display
+    useLayoutEffect(() => {
         const adjustFontSize = () => {
             const container = containerRef.current;
             const text = textRef.current;
             if (!container || !text) return;
 
-            // Reset to max size first to measure correctly
-            let currentSize = 32; // Max font size in pixels (2rem)
+            // Start big (3rem = ~48px)
+            let currentSize = 48;
             text.style.fontSize = `${currentSize}px`;
-            text.style.lineHeight = '1.4';
+            text.style.lineHeight = '1.4'; // Match JSX style
 
-            // Simple loop to fit within container height and width
+            // Loop until it fits inside both dimensions
+            // We use a small buffer (5px) to be safe
             while (
                 (text.scrollHeight > container.clientHeight || text.scrollWidth > container.clientWidth) &&
-                currentSize > 12 // Min size
+                currentSize > 12 // Minimum readable size
             ) {
                 currentSize -= 1;
                 text.style.fontSize = `${currentSize}px`;
             }
         };
 
-        // Run on open and affirmation change
         if (isOpen) {
-            // Small timeout to allow layout to settle
-            setTimeout(adjustFontSize, 0);
+            adjustFontSize();
         }
 
+        // Re-run on resize
         window.addEventListener('resize', adjustFontSize);
         return () => window.removeEventListener('resize', adjustFontSize);
     }, [affirmation, isOpen]);

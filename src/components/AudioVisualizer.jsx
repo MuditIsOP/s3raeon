@@ -42,45 +42,54 @@ function AudioVisualizer({ stream, audioRef, isRecording, isPlaying }) {
 
             ctx.clearRect(0, 0, width, height);
 
-            // Visualizer Reference: Real-time FFT
-            // We want to display ~64 bars. Buffer is usually 256 or 512.
-            // We'll sample appropriately.
-            let barCount = 64;
-            // If width is small, reduce bar count
-            if (width < 300) barCount = 32;
+            // Visualizer Logic: Mirrored, Voice-Focused
+            // Voice is mostly low-mid freq. We ignore the high 50% of bins to fill the view with activity.
+            const voiceBinCount = Math.floor(bufferLength * 0.5);
 
-            const barWidth = (width / barCount) - 2; // 2px gap
-            const step = Math.floor(bufferLength / barCount);
+            // We want ~32 bars on EACH side (64 total)
+            const sideBarCount = 32;
+            const totalWidth = width;
+            const centerX = totalWidth / 2;
+
+            const barWidth = (totalWidth / 2 / sideBarCount) - 2;
+            const step = Math.floor(voiceBinCount / sideBarCount);
 
             // Gradient: Indigo -> Pink -> Rose
             const gradient = ctx.createLinearGradient(0, 0, width, 0);
             gradient.addColorStop(0, '#6366F1');
-            gradient.addColorStop(0.5, '#EC4899');
-            gradient.addColorStop(1, '#F43F5E');
+            gradient.addColorStop(0.5, '#F43F5E'); // Center hot pink 
+            gradient.addColorStop(1, '#6366F1');
             ctx.fillStyle = gradient;
 
             // Glow
             ctx.shadowBlur = 10;
             ctx.shadowColor = 'rgba(236, 72, 153, 0.4)';
 
-            for (let i = 0; i < barCount; i++) {
-                // Get average of the 'step' bin range for smoother values
+            for (let i = 0; i < sideBarCount; i++) {
+                // Average amplitude for this bin group
                 let sum = 0;
                 for (let j = 0; j < step; j++) {
                     sum += dataArray[i * step + j];
                 }
                 const value = sum / step;
 
-                // Scale height: value is 0-255
-                // Boost quiet sounds slightly
+                // Scale height with boost for quiet sounds
                 const percent = value / 255;
-                const barHeight = Math.max(4, height * percent * 1.2);
+                const barHeight = Math.max(4, height * percent * 1.5);
 
-                const x = i * (barWidth + 2);
-                const y = (height - barHeight) / 2; // Vertically center the bars
+                // Draw Mirrored Bars (Left and Right from Center)
+                const xRight = centerX + i * (barWidth + 2);
+                const xLeft = centerX - (i + 1) * (barWidth + 2);
+                const y = (height - barHeight) / 2;
 
                 ctx.beginPath();
-                ctx.roundRect(x, y, Math.max(2, barWidth), barHeight, 4);
+
+                // Right Bar
+                ctx.roundRect(xRight, y, Math.max(2, barWidth), barHeight, 4);
+
+                // Left Bar
+                ctx.roundRect(xLeft, y, Math.max(2, barWidth), barHeight, 4);
+
                 ctx.fill();
             }
 
