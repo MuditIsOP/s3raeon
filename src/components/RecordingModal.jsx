@@ -5,11 +5,10 @@ import AudioVisualizer from './AudioVisualizer';
 
 const MIN_RECORDING_SECONDS = 60;
 
-function RecordingModal({ isOpen, onClose, onSave, affirmation, journalText }) {
+function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
     const [recordingTime, setRecordingTime] = useState(0);
     const [recordingStream, setRecordingStream] = useState(null);
     const [failedPermission, setFailedPermission] = useState(false);
-    const [uploading, setUploading] = useState(false);
 
     // Refs for Recorder
     const mediaRecorderRef = useRef(null);
