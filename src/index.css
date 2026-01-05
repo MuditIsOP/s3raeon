@@ -338,13 +338,12 @@ body {
    ============================================= */
 
 .photo-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
 }
 
 .photo-item {
-  width: 100%;
   aspect-ratio: 1;
   border-radius: 0.75rem;
   overflow: hidden;
