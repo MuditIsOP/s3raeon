@@ -17,6 +17,7 @@ import TermsModal from './components/TermsModal';
 import GuidelinesModal from './components/GuidelinesModal';
 import UpdatesModal from './components/UpdatesModal';
 import AuthScreen from './components/AuthScreen';
+import ParallaxBackground from './components/ParallaxBackground';
 
 // Create context for shared state
 export const DiaryContext = createContext();
