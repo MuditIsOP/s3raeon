@@ -132,7 +132,7 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation, journalText }) {
                         className="fixed inset-4 bottom-8 md:inset-auto md:w-[90vw] md:max-w-xl md:h-[80vh] md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 bg-[var(--bg-card)] rounded-2xl z-[201] flex flex-col overflow-hidden border border-[var(--border)] shadow-2xl"
                     >
                         {/* Header */}
-                        <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-card)]">
+                        <div className="relative z-20 px-4 py-3 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-card)] shadow-sm">
                             <div>
                                 <h3 className="font-bold text-base md:text-lg text-gradient">Voice Affirmation</h3>
                                 <p className="text-[10px] md:text-xs text-[var(--text-muted)]">Read clearly & confidentally</p>
@@ -143,17 +143,17 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation, journalText }) {
                         </div>
 
                         {/* Main Content: Auto-scaling Affirmation */}
-                        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-primary/5 min-h-0 overflow-y-auto">
-                            <div className="w-full max-w-md mx-auto">
+                        {/* justify-start + my-auto ensures vertically centered if space permits, but top-aligned if scrolling needed */}
+                        <div className="flex-1 flex flex-col justify-start p-6 text-center bg-primary/5 min-h-0 overflow-y-auto">
+                            <div className="w-full max-w-md mx-auto my-auto">
                                 <span className="text-[10px] md:text-xs font-bold text-primary uppercase tracking-wider mb-2 md:mb-4 block opacity-70">
                                     Today's Affirmation
                                 </span>
-                                {/* User requested "Spotify/Apple Music lyric" style scaling */}
                                 <p
                                     className="font-serif italic text-[var(--text)] leading-relaxed px-2"
                                     style={{
-                                        fontSize: 'clamp(1.25rem, 5vw, 2.25rem)', // Dynamic sizing: min 1.25rem, ideal 5% of viewport width, max 2.25rem
-                                        lineHeight: '1.4'
+                                        fontSize: 'clamp(1rem, 3.5vw, 1.8rem)', // Smaller clamp for better fit
+                                        lineHeight: '1.5'
                                     }}
                                 >
                                     "{affirmation}"
@@ -162,7 +162,7 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation, journalText }) {
                         </div>
 
                         {/* Footer: Recording Controls - Always Visible */}
-                        <div className="shrink-0 p-4 md:p-6 border-t border-[var(--border)] bg-[var(--bg-elevated)] relative">
+                        <div className="shrink-0 z-20 p-4 md:p-6 border-t border-[var(--border)] bg-[var(--bg-elevated)] relative">
                             {/* Visualizer Background */}
                             <div className="absolute inset-0 opacity-20 pointer-events-none">
                                 {recordingStream && <AudioVisualizer stream={recordingStream} isRecording={true} height={80} />}
@@ -172,12 +172,7 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation, journalText }) {
                                 <div className="text-2xl md:text-3xl font-mono font-bold font-variant-numeric tabular-nums tracking-wider text-white drop-shadow-lg">
                                     {formatTime(recordingTime)}
                                 </div>
-                                <p className="text-[10px] md:text-xs text-[var(--text-muted)] mb-1">
-                                    {recordingStream
-                                        ? (recordingTime < MIN_RECORDING_SECONDS ? `Keep going (${MIN_RECORDING_SECONDS - recordingTime}s left)` : 'Great! Ready to finish.')
-                                        : `Minimum duration: ${formatTime(MIN_RECORDING_SECONDS)}`
-                                    }
-                                </p>
+                                {/* Removed "Keep going" text as requested */}
 
                                 {!recordingStream ? (
                                     <button
