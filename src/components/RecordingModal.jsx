@@ -17,53 +17,57 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
     useLayoutEffect(() => {
         const container = containerRef.current;
         const text = textRef.current;
-        if (!container || !text) return;
+        if (!container || !text || !isOpen) return;
 
         const adjustFontSize = () => {
-            // Binary Search for the perfect fit
-            // Range: 12px (min readable) to 60px (nice and big)
-            let min = 12;
-            let max = 60;
-            let optimal = 12;
+            // CRITICAL: `overflow: hidden` on container prevents scrollHeight from exceeding clientHeight.
+            // We must temporarily set overflow: visible to get accurate measurements.
+            const originalOverflow = container.style.overflow;
+            container.style.overflow = 'visible';
 
-            // Loop to find largest size where container doesn't overflow
+            let min = 10; // Min readable
+            let max = 80; // Max reasonable
+            let optimal = min;
+
+            // Safety buffer to ensure text doesn't touch edges
+            const safetyBuffer = 16;
+            const availableHeight = container.clientHeight - safetyBuffer;
+
             while (min <= max) {
                 const mid = Math.floor((min + max) / 2);
                 text.style.fontSize = `${mid}px`;
                 text.style.lineHeight = '1.4';
 
-                // Critical Fix: Check if the CONTAINER overflows, not just if text fits container height.
-                // The container has other elements (Header span), so checking text.height <= container.height is wrong.
-                // container.scrollHeight > container.clientHeight means something is overflowing.
+                // Now scrollHeight will correctly exceed clientHeight if content overflows
+                const contentHeight = container.scrollHeight;
+                const fits = contentHeight <= availableHeight;
 
-                // We add a safety buffer (32px) to ensure it doesn't touch the edges/header
-                const safetyBuffer = 32;
-                const hasOverflow =
-                    container.scrollHeight > (container.clientHeight - safetyBuffer) ||
-                    container.scrollWidth > container.clientWidth;
-
-                if (!hasOverflow) {
+                if (fits) {
                     optimal = mid;
-                    min = mid + 1; // Try larger
+                    min = mid + 1;
                 } else {
-                    max = mid - 1; // Too big
+                    max = mid - 1;
                 }
             }
 
-            // Apply optimal size
+            // Apply optimal and restore overflow
             text.style.fontSize = `${optimal}px`;
+            container.style.overflow = originalOverflow || 'hidden';
         };
 
-        const observer = new ResizeObserver(() => {
-            // Debounce slightly or just run? ResizeObserver is efficient.
-            // RequestAnimationFrame ensures we don't cause loop errors.
-            requestAnimationFrame(adjustFontSize);
-        });
+        // Delay to ensure framer-motion animation completes and layout is stable
+        const timerId = setTimeout(() => {
+            adjustFontSize();
+        }, 150);
 
-        observer.observe(container);
-        adjustFontSize(); // Initial run
+        // Also listen for resize
+        const resizeHandler = () => adjustFontSize();
+        window.addEventListener('resize', resizeHandler);
 
-        return () => observer.disconnect();
+        return () => {
+            clearTimeout(timerId);
+            window.removeEventListener('resize', resizeHandler);
+        };
     }, [affirmation, isOpen]);
 
 
