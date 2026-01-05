@@ -26,20 +26,20 @@ function RecordingModal({ isOpen, onClose, onSave, affirmation }) {
             let max = 60;
             let optimal = 12;
 
-            // Preserve current content to avoid flickering during measurement logic if possible, 
-            // but we must mutate styles to measure.
-
+            // Loop to find largest size where container doesn't overflow
             while (min <= max) {
                 const mid = Math.floor((min + max) / 2);
                 text.style.fontSize = `${mid}px`;
                 text.style.lineHeight = '1.4';
 
-                // Check fits with a small buffer
-                const fits =
-                    text.scrollHeight <= container.clientHeight &&
-                    text.scrollWidth <= container.clientWidth;
+                // Critical Fix: Check if the CONTAINER overflows, not just if text fits container height.
+                // The container has other elements (Header span), so checking text.height <= container.height is wrong.
+                // container.scrollHeight > container.clientHeight means something is overflowing.
+                const hasOverflow =
+                    container.scrollHeight > container.clientHeight ||
+                    container.scrollWidth > container.clientWidth;
 
-                if (fits) {
+                if (!hasOverflow) {
                     optimal = mid;
                     min = mid + 1; // Try larger
                 } else {
