@@ -8,8 +8,8 @@ const IST_ZONE = 'Asia/Kolkata';
 // Set USE_HARDCODED_TIME to true to use the date below
 // Set to false for live time
 // ============================================
-const USE_HARDCODED_TIME = false;
-const HARDCODED_DATE = { year: 2026, month: 1, day: 5, hour: 23, minute: 55 };
+const USE_HARDCODED_TIME = true;
+const HARDCODED_DATE = { year: 2026, month: 1, day: 6, hour: 9, minute: 55 };
 // ============================================
 
 /**
