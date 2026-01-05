@@ -109,89 +109,109 @@ function PhotoSection({ todayEntry }) {
 
             <input type="file" ref={fileInputRef} accept="image/*" onChange={handleInputChange} className="hidden" />
 
-            {/* Upload Bottom Sheet */}
-            <AnimatePresence>
-                {showUploadSheet && (
-                    <>
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-backdrop" onClick={closeSheet} />
-                        <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} className="bottom-sheet">
-                            <div className="sheet-handle" />
-                            <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--text)' }}>Add Photo</h3>
+            {/* Upload Bottom Sheet via Portal */}
+            <UploadSheet
+                isOpen={showUploadSheet}
+                onClose={closeSheet}
+                previewImage={previewImage}
+                isDragging={isDragging}
+                uploading={uploading}
+                fileInputRef={fileInputRef}
+                handleDragOver={handleDragOver}
+                handleDragLeave={handleDragLeave}
+                handleDrop={handleDrop}
+                confirmUpload={confirmUpload}
+                setPreviewImage={setPreviewImage}
+            />
 
-                            {!previewImage ? (
-                                <div
-                                    className="relative rounded-xl p-8 text-center transition-all cursor-pointer"
-                                    style={{
-                                        background: isDragging ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-elevated)',
-                                        border: `2px dashed ${isDragging ? 'var(--primary)' : 'var(--border)'}`
-                                    }}
-                                    onClick={() => fileInputRef.current?.click()}
-                                    onDragOver={handleDragOver}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={handleDrop}
-                                >
-                                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)' }}>
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                    </div>
-                                    <p className="font-medium mb-1" style={{ color: 'var(--text)' }}>
-                                        {isDragging ? 'Drop your photo here' : 'Tap to select or drag photo'}
-                                    </p>
-                                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Supports JPG, PNG, HEIC</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div className="relative rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                                        <img src={previewImage.preview} alt="" className="w-full aspect-square object-cover" />
-                                        <button
-                                            onClick={() => setPreviewImage(null)}
-                                            className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
-                                            style={{ background: 'rgba(0,0,0,0.6)' }}
-                                        >
-                                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                        </button>
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <button onClick={() => fileInputRef.current?.click()} className="btn-secondary flex-1">
-                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                            Change
-                                        </button>
-                                        <button onClick={confirmUpload} disabled={uploading} className="btn-primary flex-1">
-                                            {uploading ? (
-                                                <span className="flex items-center gap-2">
-                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                    Uploading...
-                                                </span>
-                                            ) : (
-                                                <>
-                                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                                                    Upload
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            <button onClick={closeSheet} className="w-full mt-4 py-3 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-                                Cancel
-                            </button>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-
-            {/* Full View Modal */}
-            <AnimatePresence>
-                {selectedPhoto && (
-                    <>
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-50" onClick={() => setSelectedPhoto(null)} />
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedPhoto(null)}>
-                            <img src={selectedPhoto.url} alt="" className="max-w-full max-h-full object-contain rounded-xl" />
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+            {/* Full View Modal via Portal */}
+            {selectedPhoto && createPortal(
+                <AnimatePresence>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-[9999]" onClick={() => setSelectedPhoto(null)} />
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setSelectedPhoto(null)}>
+                        <img src={selectedPhoto.url} alt="" className="max-w-full max-h-full object-contain rounded-xl" />
+                    </motion.div>
+                </AnimatePresence>,
+                document.body
+            )}
         </section>
+    );
+}
+
+function UploadSheet({ isOpen, onClose, previewImage, isDragging, uploading, fileInputRef, handleDragOver, handleDragLeave, handleDrop, confirmUpload, setPreviewImage }) {
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
+        <AnimatePresence>
+            {isOpen && (
+                <>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-backdrop z-[200]" onClick={onClose} />
+                    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} className="bottom-sheet z-[201]">
+                        <div className="sheet-handle" />
+                        <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--text)' }}>Add Photo</h3>
+
+                        {!previewImage ? (
+                            <div
+                                className="relative rounded-xl p-8 text-center transition-all cursor-pointer"
+                                style={{
+                                    background: isDragging ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-elevated)',
+                                    border: `2px dashed ${isDragging ? 'var(--primary)' : 'var(--border)'}`
+                                }}
+                                onClick={() => fileInputRef.current?.click()}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                            >
+                                <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)' }}>
+                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>
+                                <p className="font-medium mb-1" style={{ color: 'var(--text)' }}>
+                                    {isDragging ? 'Drop your photo here' : 'Tap to select or drag photo'}
+                                </p>
+                                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Supports JPG, PNG, HEIC</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="relative rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                                    <img src={previewImage.preview} alt="" className="w-full aspect-square object-cover" />
+                                    <button
+                                        onClick={() => setPreviewImage(null)}
+                                        className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                                        style={{ background: 'rgba(0,0,0,0.6)' }}
+                                    >
+                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button onClick={() => fileInputRef.current?.click()} className="btn-secondary flex-1">
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                        Change
+                                    </button>
+                                    <button onClick={confirmUpload} disabled={uploading} className="btn-primary flex-1">
+                                        {uploading ? (
+                                            <span className="flex items-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Uploading...
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                                Upload
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <button onClick={onClose} className="w-full mt-4 py-3 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+                            Cancel
+                        </button>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>,
+        document.body
     );
 }
 

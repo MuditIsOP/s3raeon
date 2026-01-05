@@ -1,4 +1,3 @@
-import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDiary } from '../App';
@@ -9,6 +8,22 @@ import GuidelinesModal from '../components/GuidelinesModal';
 import DayViewModal from '../components/DayViewModal';
 import ExportModal from '../components/ExportModal';
 import AboutModal from '../components/AboutModal';
+
+// Animation Variants
+const container = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+
+const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+};
 
 const MENU_ICONS = {
     calendar: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
@@ -226,30 +241,45 @@ function More() {
                                 color: (isVoiceMode ? r.affirmation : r.excerpt) ? 'var(--text-secondary)' : 'var(--text-muted)',
                                 fontStyle: (isVoiceMode ? r.affirmation : r.excerpt) ? 'normal' : 'italic'
                             }}>
-                                {isVoiceMode ? (r.affirmation || "Affirmation not recorded") : (r.excerpt || "Journal not written yet")}
+                                {(() => {
+                                    const text = isVoiceMode ? (r.affirmation || "Affirmation not recorded") : (r.excerpt || "Journal not written yet");
+                                    if (!searchQuery?.trim()) return text;
+
+                                    // Highlight logic
+                                    const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
+                                    return parts.map((part, i) =>
+                                        part.toLowerCase() === searchQuery.toLowerCase() ?
+                                            <span key={i} className="bg-yellow-500/30 text-yellow-200 rounded px-0.5">{part}</span> : part
+                                    );
+                                })()}
                             </p>
                         </div>
                     ))}
                 </motion.div>
             ) : (
-                <div className="space-y-3">
-                    {menuItems.map((item, i) => (
-                        <motion.div key={item.title} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                            {item.path ? (
-                                <Link to={item.path} className="card flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{item.icon}</div>
+                <motion.div
+                    variants={container}
+                    initial="hidden"
+                    animate="show"
+                    className="space-y-3"
+                >
+                    {menuItems.map((menuItem) => (
+                        <motion.div key={menuItem.title} variants={item}>
+                            {menuItem.path ? (
+                                <Link to={menuItem.path} className="card flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{menuItem.icon}</div>
                                     <div className="flex-1">
-                                        <p className="font-semibold" style={{ color: 'var(--text)' }}>{item.title}</p>
-                                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.desc}</p>
+                                        <p className="font-semibold" style={{ color: 'var(--text)' }}>{menuItem.title}</p>
+                                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{menuItem.desc}</p>
                                     </div>
                                     <svg className="w-4 h-4" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                                 </Link>
                             ) : (
-                                <button onClick={item.action} className="card w-full flex items-center gap-4 text-left">
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{item.icon}</div>
+                                <button onClick={menuItem.action} className="card w-full flex items-center gap-4 text-left">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{menuItem.icon}</div>
                                     <div className="flex-1">
-                                        <p className="font-semibold" style={{ color: 'var(--text)' }}>{item.title}</p>
-                                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.desc}</p>
+                                        <p className="font-semibold" style={{ color: 'var(--text)' }}>{menuItem.title}</p>
+                                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{menuItem.desc}</p>
                                     </div>
                                     <svg className="w-4 h-4" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                                 </button>
@@ -257,11 +287,11 @@ function More() {
                         </motion.div>
                     ))}
 
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-center pt-12">
+                    <motion.div variants={item} className="text-center pt-12">
                         <p className="logo-text text-sm">S3RΛ<span className="logo-accent">EON</span></p>
                         <a href="https://api.whatsapp.com/send?phone=916393189634&text=Hello%20" target="_blank" rel="noopener noreferrer" className="text-xs mt-1 block hover:text-[var(--primary)] transition-colors" style={{ color: 'var(--text-muted)' }}>from Mudit</a>
                     </motion.div>
-                </div>
+                </motion.div>
             )}
 
             <AnimatePresence>

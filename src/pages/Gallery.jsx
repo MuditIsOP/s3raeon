@@ -13,6 +13,22 @@ const MOOD_CONFIG = [
     { value: 5, label: 'Hard', color: '#ef4444' },
 ];
 
+// Animation Variants
+const container = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.05
+        }
+    }
+};
+
+const item = {
+    hidden: { opacity: 0, scale: 0.9 },
+    show: { opacity: 1, scale: 1 }
+};
+
 function Gallery() {
     const { entries, togglePhotoStar } = useDiary();
     const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -176,12 +192,22 @@ function Gallery() {
                             Object.entries(groupedFavorites)
                                 .sort(([a], [b]) => sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a))
                                 .map(([key, { label, photos }]) => (
-                                    <div key={key} className="mb-6">
+                                    <motion.div
+                                        key={key}
+                                        className="mb-6"
+                                        variants={container}
+                                        initial="hidden"
+                                        animate="show"
+                                    >
                                         <p className="text-label mb-3 sticky top-0 bg-[var(--bg)]/80 backdrop-blur-sm z-10 py-2">{label}</p>
                                         <div className="grid grid-cols-3 gap-1">
-                                            {photos.map((photo) => <PhotoTile key={`${photo.date}-${photo.index}`} photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />)}
+                                            {photos.map((photo) => (
+                                                <motion.div key={`${photo.date}-${photo.index}`} variants={item}>
+                                                    <PhotoTile photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />
+                                                </motion.div>
+                                            ))}
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))
                         )}
                     </motion.div>
@@ -198,12 +224,22 @@ function Gallery() {
                             Object.entries(groupedPhotos)
                                 .sort(([a], [b]) => sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a))
                                 .map(([key, { label, photos }]) => (
-                                    <div key={key} className="mb-6">
+                                    <motion.div
+                                        key={key}
+                                        className="mb-6"
+                                        variants={container}
+                                        initial="hidden"
+                                        animate="show"
+                                    >
                                         <p className="text-label mb-3 sticky top-0 bg-[var(--bg)]/80 backdrop-blur-sm z-10 py-2">{label}</p>
                                         <div className="grid grid-cols-3 gap-1">
-                                            {photos.map((photo) => <PhotoTile key={`${photo.date}-${photo.index}`} photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />)}
+                                            {photos.map((photo) => (
+                                                <motion.div key={`${photo.date}-${photo.index}`} variants={item}>
+                                                    <PhotoTile photo={photo} onClick={() => setSelectedPhoto(photo)} onLongPress={() => handleStar(photo)} />
+                                                </motion.div>
+                                            ))}
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))
                         )}
                     </motion.div>

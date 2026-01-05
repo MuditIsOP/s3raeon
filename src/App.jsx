@@ -222,6 +222,7 @@ function App() {
 
     return (
         <DiaryContext.Provider value={contextValue}>
+            <ParallaxBackground />
             <BrowserRouter>
                 <div className="min-h-screen pb-20">
                     <AnimatedRoutes />
