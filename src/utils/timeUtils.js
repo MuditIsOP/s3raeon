@@ -41,7 +41,7 @@ export const getCurrentHourIST = () => {
  */
 export const isMorningTime = () => {
     const hour = getCurrentHourIST();
-    return hour >= 5 && hour < 23;
+    return hour >= 5 && hour < 10;
 };
 
 /**
