@@ -71,7 +71,7 @@ function Gallery() {
             }
         });
 
-        const getTime = (p) => DateTime.fromISO(p.timestamp || p.date).toMillis();
+        const getTime = (p) => DateTime.fromISO(p.timestamp || p.uploadedAt || p.date).toMillis();
         const compare = (a, b) => sortOrder === 'asc' ? getTime(a) - getTime(b) : getTime(b) - getTime(a);
 
         all.sort(compare);
