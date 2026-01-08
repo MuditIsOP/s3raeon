@@ -7,6 +7,7 @@ import { DiaryContext } from '../App';
 import Header from '../components/Header';
 import Stats from '../pages/Stats';
 import Profile from '../pages/Profile';
+import ShitDisclaimerModal from '../components/ShitDisclaimerModal';
 
 // SHIT'S DIARY Component
 const SHIT_BUCKET = 'mudit-diary';
@@ -20,6 +21,16 @@ const MOOD_EMOJIS = {
 };
 
 function ShitDiaryApp() {
+    const [accepted, setAccepted] = useState(false);
+
+    if (!accepted) {
+        return (
+            <div className="theme-shit min-h-screen bg-black">
+                <ShitDisclaimerModal onAccept={() => setAccepted(true)} bucketName={SHIT_BUCKET} />
+            </div>
+        );
+    }
+
     return (
         <div className="theme-shit min-h-screen pb-20">
             <ShitDiaryProvider>

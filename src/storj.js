@@ -176,7 +176,28 @@ export default {
     saveEntry,
     getEntry,
     getPresignedUrl,
+    saveLog,
 };
+
+/**
+ * Save a tracking log to Storj
+ * Creates a unique file for each session
+ */
+export async function saveLog(logData, bucketName = BUCKET_NAME) {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const key = `logs/session_${timestamp}_${Math.random().toString(36).substr(2, 5)}.json`;
+    const json = JSON.stringify(logData, null, 2);
+
+    const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        Body: json,
+        ContentType: 'application/json',
+    });
+
+    await s3Client.send(command);
+    return key;
+}
 // Load App Config (Password, etc.)
 export const loadConfig = async (bucketName = STORJ_CONFIG.bucket) => {
     try {
