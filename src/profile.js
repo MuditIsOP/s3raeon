@@ -1,4 +1,4 @@
-import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Use same config as storj.js - env vars have the working credentials
@@ -35,6 +35,7 @@ const DEFAULT_PROFILE = {
 // Load profile from Storj (no caching - strict)
 export const loadProfile = async (bucketName = BUCKET_NAME) => {
     try {
+        // 1. Load Profile Data
         const command = new GetObjectCommand({
             Bucket: bucketName,
             Key: 'profile/profile.json',
@@ -43,6 +44,31 @@ export const loadProfile = async (bucketName = BUCKET_NAME) => {
         const response = await s3Client.send(command);
         const body = await response.Body.transformToString();
         const profile = JSON.parse(body);
+
+        // 2. Refresh Profile Photo URL (Self-healing for expired links)
+        // Check for any file starting with 'profile/photo.'
+        const listCommand = new ListObjectsV2Command({
+            Bucket: bucketName,
+            Prefix: 'profile/photo.',
+            MaxKeys: 1
+        });
+
+        try {
+            const listResponse = await s3Client.send(listCommand);
+            if (listResponse.Contents && listResponse.Contents.length > 0) {
+                const photoKey = listResponse.Contents[0].Key;
+                // Generate fresh 7-day signed URL
+                const getPhotoCommand = new GetObjectCommand({ Bucket: bucketName, Key: photoKey });
+                const freshUrl = await getSignedUrl(s3Client, getPhotoCommand, { expiresIn: 60 * 60 * 24 * 7 });
+                profile.profilePhotoUrl = freshUrl;
+            } else {
+                profile.profilePhotoUrl = null; // No photo found
+            }
+        } catch (photoErr) {
+            console.warn("Failed to refresh photo URL:", photoErr);
+            // Fallback to existing URL if any (might be expired, but better than nothing)
+        }
+
         return profile;
     } catch (error) {
         if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {

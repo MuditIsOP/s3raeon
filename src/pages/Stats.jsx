@@ -316,8 +316,8 @@ const Stats = () => {
                         <AreaChart data={writingVolumeData}>
                             <defs>
                                 <linearGradient id="colorChars" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                    <stop offset="5%" stopColor={isShitDiary ? "#f97316" : "#8b5cf6"} stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor={isShitDiary ? "#f97316" : "#8b5cf6"} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
@@ -329,7 +329,7 @@ const Stats = () => {
                                 labelStyle={{ color: 'var(--text-muted)' }}
                                 formatter={(value) => [value, 'Characters']}
                             />
-                            <Area type="monotone" dataKey="chars" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorChars)" strokeWidth={2} />
+                            <Area type="monotone" dataKey="chars" stroke={isShitDiary ? "#f97316" : "#8b5cf6"} fillOpacity={1} fill="url(#colorChars)" strokeWidth={2} />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
@@ -428,7 +428,7 @@ const Stats = () => {
 
                 {/* Avg Characters */}
                 <div className="card flex flex-col items-center justify-center py-4">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-pink-500/20 text-pink-400 mb-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${isShitDiary ? 'bg-orange-500/20 text-orange-400' : 'bg-pink-500/20 text-pink-400'}`}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     </div>
                     <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{avgCharacters.toLocaleString()}</div>

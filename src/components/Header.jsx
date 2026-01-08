@@ -12,8 +12,9 @@ function Header({ title, showStreak = false, showProfile = true, onClose }) {
     const isShitDiary = location.pathname.startsWith('/shit');
 
     useEffect(() => {
-        loadProfile().then(setProfile);
-    }, []);
+        const bucket = isShitDiary ? 'mudit-diary' : 'arshita-diary';
+        loadProfile(bucket).then(setProfile);
+    }, [isShitDiary]);
 
     return (
         <header className="header">
