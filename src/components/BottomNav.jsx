@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const navItems = [
@@ -29,6 +29,11 @@ const navItems = [
 ];
 
 function BottomNav() {
+    const location = useLocation();
+
+    // Hide on SHIT'S DIARY (it has its own nav)
+    if (location.pathname.startsWith('/shit')) return null;
+
     return (
         <nav className="bottom-nav">
             <div className="bottom-nav-inner relative">

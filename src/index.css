@@ -23,6 +23,15 @@
   --border: #27272A;
 }
 
+/* SHIT'S DIARY Theme (Orange) */
+.theme-shit {
+  --primary: #f97316;      /* Orange-500 */
+  --primary-light: #fb923c; /* Orange-400 */
+  --primary-dark: #ea580c;  /* Orange-600 */
+  --accent: #f59e0b;       /* Amber-500 */
+  --accent-light: #fbbf24; /* Amber-400 */
+}
+
 * {
   margin: 0;
   padding: 0;

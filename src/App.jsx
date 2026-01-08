@@ -1,9 +1,21 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+
+// Helper component to handle initial redirects
+function RedirectHandler({ to, setRedirect }) {
+    const navigate = useNavigate();
+    useEffect(() => {
+        if (to) {
+            navigate(to);
+            setRedirect(null);
+        }
+    }, [to, navigate, setRedirect]);
+    return null;
+}
 import { getTodayIST } from './utils/timeUtils';
 import { calculateCurrentStreak, checkMilestone } from './utils/streakUtils';
-import { loadEntries, saveEntry as storjSaveEntry } from './storj';
+import { loadEntries, saveEntry as storjSaveEntry, BUCKET_NAME } from './storj';
 
 import BottomNav from './components/BottomNav';
 import Home from './pages/Home';
@@ -18,6 +30,7 @@ import GuidelinesModal from './components/GuidelinesModal';
 import UpdatesModal from './components/UpdatesModal';
 import AuthScreen from './components/AuthScreen';
 import ParallaxBackground from './components/ParallaxBackground';
+import ShitDiaryApp from './apps/ShitDiaryApp'; // THE SECOND APP
 
 // Create context for shared state
 export const DiaryContext = createContext();
@@ -27,9 +40,14 @@ export const useDiary = () => useContext(DiaryContext);
 function AnimatedRoutes() {
     const location = useLocation();
 
+    // Smart Key: Keep ShitDiaryApp mounted when navigating inside /shit/*
+    // consistently returning 'shit-diary' as key for any /shit/* path
+    const routeKey = location.pathname.startsWith('/shit') ? 'shit-diary' : location.pathname;
+
     return (
         <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
+            <Routes location={location} key={routeKey}>
+                <Route path="/shit/*" element={<ShitDiaryApp />} />
                 <Route path="/" element={<Home />} />
                 <Route path="/gallery" element={<Gallery />} />
                 <Route path="/stats" element={<Stats />} />
@@ -53,8 +71,9 @@ function App() {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
     const [updatesSeen, setUpdatesSeen] = useState(false);
+    const [initialRedirect, setInitialRedirect] = useState(null);
 
-    // Check for acceptance on mount
+    // Initial check for authentication
     useEffect(() => {
         const terms = localStorage.getItem('s3raeon_terms_accepted');
         const guide = localStorage.getItem('s3raeon_guidelines_accepted');
@@ -185,12 +204,18 @@ function App() {
         saveEntry,
         togglePhotoStar,
         toggleDayStar,
+        togglePhotoStar,
+        toggleDayStar,
+        bucketName: BUCKET_NAME, // Default bucket
     };
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     if (!isAuthenticated) {
-        return <AuthScreen onAuthenticated={() => setIsAuthenticated(true)} />;
+        return <AuthScreen onAuthenticated={(path) => {
+            setIsAuthenticated(true);
+            if (path) setInitialRedirect(path);
+        }} />;
     }
 
     // 0. Loading State (Show this BEFORE modals to avoid "stuck" feeling)
@@ -226,6 +251,7 @@ function App() {
             <ParallaxBackground />
             <BrowserRouter>
                 <div className="min-h-screen pb-20">
+                    <RedirectHandler to={initialRedirect} setRedirect={setInitialRedirect} />
                     <AnimatedRoutes />
                     <BottomNav />
                 </div>

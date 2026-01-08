@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useDiary } from '../App'; // Import useDiary
 import { loadProfile, saveProfile, uploadProfilePhoto, getInitials } from '../profile';
 import { loadConfig, saveConfig } from '../storj'; // Import config functions
 import { DateTime } from 'luxon';
@@ -8,6 +9,7 @@ import Header from '../components/Header';
 
 function Profile() {
     const navigate = useNavigate();
+    const { bucketName } = useDiary(); // Get bucketName
     const fileInputRef = useRef(null);
     const [profile, setProfile] = useState({
         firstName: 'Arshita',
@@ -47,8 +49,8 @@ function Profile() {
         setLoading(true);
         try {
             const [profileData, configData] = await Promise.all([
-                loadProfile(),
-                loadConfig()
+                loadProfile(bucketName),
+                loadConfig(bucketName)
             ]);
             setProfile(profileData);
             setOriginalProfile({ ...profileData }); // Clone for comparison
@@ -65,7 +67,7 @@ function Profile() {
         setSaving(true);
         try {
             // Save to server
-            await saveProfile(profile);
+            await saveProfile(profile, bucketName);
 
             // Success
             setOriginalProfile({ ...profile });
@@ -88,10 +90,10 @@ function Profile() {
 
         setUploadingPhoto(true);
         try {
-            const url = await uploadProfilePhoto(file);
+            const url = await uploadProfilePhoto(file, bucketName);
             const updatedProfile = { ...profile, profilePhotoUrl: url };
             setProfile(updatedProfile);
-            await saveProfile(updatedProfile);
+            await saveProfile(updatedProfile, bucketName);
             setMessage({ type: 'success', text: 'Photo updated' });
             setTimeout(() => setMessage(null), 3000);
         } catch (error) {
@@ -215,36 +217,39 @@ function Profile() {
                 </div>
 
                 {/* Security Section */}
-                <div className="card">
-                    <h3 className="card-title mb-4">Security</h3>
-                    <div className="space-y-3">
-                        <button
-                            onClick={() => setShowPasswordModal(true)}
-                            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg)] transition-colors text-left"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                {/* Security Section - Hide for Shit Diary */}
+                {bucketName !== 'mudit-diary' && (
+                    <div className="card">
+                        <h3 className="card-title mb-4">Security</h3>
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => setShowPasswordModal(true)}
+                                className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg)] transition-colors text-left"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                    </div>
+                                    <span className="font-medium" style={{ color: 'var(--text)' }}>Change Password</span>
                                 </div>
-                                <span className="font-medium" style={{ color: 'var(--text)' }}>Change Password</span>
-                            </div>
-                            <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                        </button>
+                                <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            </button>
 
-                        <button
-                            onClick={() => setShowSecurityModal(true)}
-                            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg)] transition-colors text-left"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <button
+                                onClick={() => setShowSecurityModal(true)}
+                                className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg)] transition-colors text-left"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </div>
+                                    <span className="font-medium" style={{ color: 'var(--text)' }}>Change Security Question</span>
                                 </div>
-                                <span className="font-medium" style={{ color: 'var(--text)' }}>Change Security Question</span>
-                            </div>
-                            <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                        </button>
+                                <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="flex flex-col gap-3 mt-6">
                     <AnimatePresence>

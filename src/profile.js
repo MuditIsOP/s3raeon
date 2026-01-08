@@ -33,10 +33,10 @@ const DEFAULT_PROFILE = {
 };
 
 // Load profile from Storj (no caching - strict)
-export const loadProfile = async () => {
+export const loadProfile = async (bucketName = BUCKET_NAME) => {
     try {
         const command = new GetObjectCommand({
-            Bucket: BUCKET_NAME,
+            Bucket: bucketName,
             Key: 'profile/profile.json',
             ResponseCacheControl: 'no-cache, no-store, must-revalidate',
         });
@@ -54,9 +54,9 @@ export const loadProfile = async () => {
 };
 
 // Save profile to Storj (no caching)
-export const saveProfile = async (profileData) => {
+export const saveProfile = async (profileData, bucketName = BUCKET_NAME) => {
     const command = new PutObjectCommand({
-        Bucket: BUCKET_NAME,
+        Bucket: bucketName,
         Key: 'profile/profile.json',
         Body: JSON.stringify(profileData, null, 2),
         ContentType: 'application/json',
@@ -67,13 +67,13 @@ export const saveProfile = async (profileData) => {
 };
 
 // Upload profile photo
-export const uploadProfilePhoto = async (file) => {
+export const uploadProfilePhoto = async (file, bucketName = BUCKET_NAME) => {
     const ext = file.type.split('/')[1] || 'jpg';
     const key = `profile/photo.${ext}`;
     const arrayBuffer = await file.arrayBuffer();
 
     const putCommand = new PutObjectCommand({
-        Bucket: BUCKET_NAME,
+        Bucket: bucketName,
         Key: key,
         Body: new Uint8Array(arrayBuffer),
         ContentType: file.type,
@@ -81,7 +81,7 @@ export const uploadProfilePhoto = async (file) => {
     await s3Client.send(putCommand);
 
     // Get presigned URL for viewing (7 days)
-    const getCommand = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key });
+    const getCommand = new GetObjectCommand({ Bucket: bucketName, Key: key });
     const url = await getSignedUrl(s3Client, getCommand, { expiresIn: 60 * 60 * 24 * 7 });
     return url;
 };

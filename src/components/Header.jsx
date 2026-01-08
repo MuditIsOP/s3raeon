@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDiary } from '../App';
 import { loadProfile, getInitials } from '../profile';
 
 function Header({ title, showStreak = false, showProfile = true, onClose }) {
     const { currentStreak } = useDiary();
     const navigate = useNavigate();
+    const location = useLocation();
     const [profile, setProfile] = useState({ firstName: 'Arshita' });
+
+    const isShitDiary = location.pathname.startsWith('/shit');
 
     useEffect(() => {
         loadProfile().then(setProfile);
@@ -30,7 +33,7 @@ function Header({ title, showStreak = false, showProfile = true, onClose }) {
                     )}
                     {showProfile && !onClose && (
                         <button
-                            onClick={() => navigate('/profile')}
+                            onClick={() => navigate(isShitDiary ? '/shit/profile' : '/profile')}
                             className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border-2 border-[var(--bg-elevated)]"
                             style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}
                         >

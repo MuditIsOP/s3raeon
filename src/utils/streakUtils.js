@@ -31,9 +31,15 @@ export const calculateCurrentStreak = (entries) => {
     // Start from today if there's a COMPLETED entry. 
     // If today is incomplete/missing, start from yesterday if THAT is completed.
     // Otherwise, streak is 0.
-    if (entries[todayStr] && entries[todayStr].completed) {
+    // Check if today has an entry (completed OR has mood/journal)
+    const isCompleted = (entry) => entry && (entry.completed || entry.mood || (entry.journal && entry.journal.length > 0));
+
+    // Start from today if there's a COMPLETED entry. 
+    // If today is incomplete/missing, start from yesterday if THAT is completed.
+    // Otherwise, streak is 0.
+    if (isCompleted(entries[todayStr])) {
         checkDate = today;
-    } else if (entries[yesterdayStr] && entries[yesterdayStr].completed) {
+    } else if (isCompleted(entries[yesterdayStr])) {
         checkDate = today.minus({ days: 1 });
     } else {
         return 0;
@@ -42,7 +48,9 @@ export const calculateCurrentStreak = (entries) => {
     // Count consecutive days backwards
     while (true) {
         const dateStr = checkDate.toFormat('yyyy-MM-dd');
-        if (entries[dateStr] && entries[dateStr].completed) {
+        // Redefine check locally if needed or reuse logic
+        const entry = entries[dateStr];
+        if (entry && (entry.completed || entry.mood || (entry.journal && entry.journal.length > 0))) {
             streak++;
             checkDate = checkDate.minus({ days: 1 });
         } else {
@@ -62,7 +70,10 @@ export const calculateLongestStreak = (entries) => {
     if (!entries || Object.keys(entries).length === 0) return 0;
 
     const dates = Object.keys(entries)
-        .filter(date => entries[date].completed)
+        .filter(date => {
+            const e = entries[date];
+            return e && (e.completed || e.mood || (e.journal && e.journal.length > 0));
+        })
         .sort();
 
     if (dates.length === 0) return 0;
@@ -156,7 +167,7 @@ export const generateHeatMapData = (entries, weeks = 12) => {
         data.push({
             date: dateStr,
             day: date.weekday, // 1=Mon, 7=Sun
-            hasEntry: !!entry?.completed,
+            hasEntry: !!(entry && (entry.completed || entry.mood || (entry.journal && entry.journal.length > 0))),
             mood: entry?.mood || null,
             weekLabel: date.toFormat('MMM d')
         });
@@ -190,7 +201,8 @@ export const getRotatedDayHeaders = () => {
  * @returns {Object} Statistics object
  */
 export const getStreakStats = (entries) => {
-    const dates = Object.keys(entries || {}).filter(date => entries[date].completed);
+    const isCompleted = (e) => e && (e.completed || e.mood || (e.journal && e.journal.length > 0));
+    const dates = Object.keys(entries || {}).filter(date => isCompleted(entries[date]));
     const totalDays = dates.length;
     const currentStreak = calculateCurrentStreak(entries);
     const longestStreak = calculateLongestStreak(entries);
@@ -201,7 +213,7 @@ export const getStreakStats = (entries) => {
     let completedLast30 = 0;
     for (let i = 0; i < 30; i++) {
         const dateStr = today.minus({ days: i }).toFormat('yyyy-MM-dd');
-        if (entries?.[dateStr]?.completed) {
+        if (isCompleted(entries?.[dateStr])) {
             completedLast30++;
         }
     }

@@ -26,7 +26,8 @@ const STAT_ICONS = {
 };
 
 const Stats = () => {
-    const { entries, currentStreak, saveEntry } = useDiary(); // Get saveEntry
+    const { entries, currentStreak, saveEntry, bucketName } = useDiary(); // Get bucketName
+    const isShitDiary = bucketName === 'mudit-diary';
     const stats = useMemo(() => getStreakStats(entries), [entries]);
     const heatMapData = useMemo(() => generateHeatMapData(entries, 8), [entries]);
     const milestoneProgress = useMemo(() => getMilestoneProgress(currentStreak), [currentStreak]);
@@ -46,7 +47,7 @@ const Stats = () => {
 
     const handleSyncAllStats = async () => {
         setIsSyncing(true);
-        const bucket = import.meta.env.VITE_STORJ_BUCKET || 'arshita-diary';
+        const bucket = bucketName; // Use dynamic bucket
 
         try {
             // 1. Sync Audio Duration
@@ -237,7 +238,7 @@ const Stats = () => {
             <Header title="Stats" />
 
             {/* Sync Banner */}
-            {(missingDurationCount > 0 || missingPhotoSizeCount > 0) && (
+            {!isShitDiary && (missingDurationCount > 0 || missingPhotoSizeCount > 0) && (
                 <div className="mb-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex flex-col gap-2">
                     <div className="flex items-center gap-2 text-orange-500 font-semibold">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
@@ -333,82 +334,97 @@ const Stats = () => {
                     </ResponsiveContainer>
                 </div>
             </div>
+
             {/* Voice Duration Chart */}
-            <div className="card mb-6">
-                <h3 className="card-title mb-4">Voice Duration (Seconds)</h3>
-                <div className="h-48 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={voiceDurationData}>
-                            <defs>
-                                <linearGradient id="colorDuration" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                            <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} interval={2} />
-                            <YAxis hide />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '8px' }}
-                                itemStyle={{ color: 'var(--text)' }}
-                                labelStyle={{ color: 'var(--text-muted)' }}
-                                formatter={(value) => [formatDuration(value), 'Duration']}
-                            />
-                            <Area type="monotone" dataKey="duration" stroke="#06b6d4" fillOpacity={1} fill="url(#colorDuration)" strokeWidth={2} />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
+            {
+                !isShitDiary && (
+                    <div className="card mb-6">
+                        <h3 className="card-title mb-4">Voice Duration (Seconds)</h3>
+                        <div className="h-48 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={voiceDurationData}>
+                                    <defs>
+                                        <linearGradient id="colorDuration" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                                    <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} interval={2} />
+                                    <YAxis hide />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '8px' }}
+                                        itemStyle={{ color: 'var(--text)' }}
+                                        labelStyle={{ color: 'var(--text-muted)' }}
+                                        formatter={(value) => [formatDuration(value), 'Duration']}
+                                    />
+                                    <Area type="monotone" dataKey="duration" stroke="#06b6d4" fillOpacity={1} fill="url(#colorDuration)" strokeWidth={2} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* Photo Stats Row */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="card flex flex-col items-center justify-center py-4 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 blur-2xl pointer-events-none" />
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-500/20 text-yellow-400 mb-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    </div>
-                    <div className="text-2xl font-bold text-gradient mb-1">{photoStats.count}</div>
-                    <div className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Total Memories</div>
-                </div>
+            {
+                !isShitDiary && (
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="card flex flex-col items-center justify-center py-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 blur-2xl pointer-events-none" />
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-500/20 text-yellow-400 mb-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L16 16" /></svg>
+                            </div>
+                            <div className="text-2xl font-bold text-gradient mb-1">{photoStats.count}</div>
+                            <div className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Total Memories</div>
+                        </div>
 
-                <div className="card flex flex-col items-center justify-center py-4 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-16 h-16 bg-blue-500/10 blur-2xl pointer-events-none" />
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-400 mb-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                        <div className="card flex flex-col items-center justify-center py-4 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-16 h-16 bg-blue-500/10 blur-2xl pointer-events-none" />
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-400 mb-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                            </div>
+                            <div className="text-2xl font-bold text-gradient mb-1">{formatSize(photoStats.totalSize)}</div>
+                            <div className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Storage Used</div>
+                        </div>
                     </div>
-                    <div className="text-2xl font-bold text-gradient mb-1">{formatSize(photoStats.totalSize)}</div>
-                    <div className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Storage Used</div>
-                </div>
-            </div>
+                )
+            }
 
             {/* Quick Stats Row (Voice & Text) */}
-            <div className="grid grid-cols-4 gap-3 mb-6">
+            <div className={`grid gap-3 mb-6 ${isShitDiary ? 'grid-cols-1' : 'grid-cols-4'}`}>
                 {/* Recordings */}
-                <div className="card flex flex-col items-center justify-center py-4">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-500/20 text-purple-400 mb-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                {!isShitDiary && (
+                    <div className="card flex flex-col items-center justify-center py-4">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-500/20 text-purple-400 mb-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        </div>
+                        <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{voiceStats.count}</div>
+                        <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Recordings</div>
                     </div>
-                    <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{voiceStats.count}</div>
-                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Recordings</div>
-                </div>
+                )}
 
                 {/* Total Time */}
-                <div className="card flex flex-col items-center justify-center py-4">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-400 mb-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {!isShitDiary && (
+                    <div className="card flex flex-col items-center justify-center py-4">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-400 mb-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{formatDuration(voiceStats.totalDuration)}</div>
+                        <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Total Time</div>
                     </div>
-                    <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{formatDuration(voiceStats.totalDuration)}</div>
-                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Total Time</div>
-                </div>
+                )}
 
                 {/* Avg Duration */}
-                <div className="card flex flex-col items-center justify-center py-4">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-cyan-500/20 text-cyan-400 mb-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                {!isShitDiary && (
+                    <div className="card flex flex-col items-center justify-center py-4">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-cyan-500/20 text-cyan-400 mb-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </div>
+                        <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{formatDuration(voiceStats.avgDuration)}</div>
+                        <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Avg Duration</div>
                     </div>
-                    <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{formatDuration(voiceStats.avgDuration)}</div>
-                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Avg Duration</div>
-                </div>
+                )}
 
                 {/* Avg Characters */}
                 <div className="card flex flex-col items-center justify-center py-4">
@@ -442,28 +458,30 @@ const Stats = () => {
             </div>
 
             {/* Mood Breakdown Pie */}
-            {moodData.length > 0 && (
-                <div className="card">
-                    <h3 className="card-title mb-4">Mood Breakdown</h3>
-                    <div className="flex items-center justify-center" style={{ height: '160px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={moodData} dataKey="count" cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={4}>
-                                    {moodData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="var(--card-bg)" strokeWidth={2} />)}
-                                </Pie>
-                            </PieChart>
-                        </ResponsiveContainer>
+            {
+                moodData.length > 0 && (
+                    <div className="card">
+                        <h3 className="card-title mb-4">Mood Breakdown</h3>
+                        <div className="flex items-center justify-center" style={{ height: '160px' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={moodData} dataKey="count" cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={4}>
+                                        {moodData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="var(--card-bg)" strokeWidth={2} />)}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-4 mt-4">
+                            {moodData.map((m) => (
+                                <div key={m.value} className="flex items-center gap-1.5 bg-[var(--bg-elevated)] px-2 py-1 rounded-lg">
+                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: m.color }} />
+                                    <span className="text-xs font-medium" style={{ color: 'var(--text)' }}>{m.label} ({m.count})</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex flex-wrap justify-center gap-4 mt-4">
-                        {moodData.map((m) => (
-                            <div key={m.value} className="flex items-center gap-1.5 bg-[var(--bg-elevated)] px-2 py-1 rounded-lg">
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: m.color }} />
-                                <span className="text-xs font-medium" style={{ color: 'var(--text)' }}>{m.label} ({m.count})</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                )
+            }
         </motion.div >
     );
 }

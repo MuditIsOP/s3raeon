@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { loadConfig, saveConfig } from '../storj';
 
+const SHIT_PASSWORD = "I will be better for arshita";
+
 function AuthScreen({ onAuthenticated }) {
     // Modes: 'loading' | 'login' | 'setup' | 'recovery'
     const [mode, setMode] = useState('loading');
@@ -9,6 +11,9 @@ function AuthScreen({ onAuthenticated }) {
     const [inputPassword, setInputPassword] = useState('');
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+
+    // Toggle for Shit Diary Mode
+    const [isShitMode, setIsShitMode] = useState(false);
 
     // Setup State
     const [newPassword, setNewPassword] = useState('');
@@ -41,11 +46,25 @@ function AuthScreen({ onAuthenticated }) {
 
     const handleLogin = (e) => {
         e.preventDefault();
-        if (inputPassword === config.password) {
-            onAuthenticated();
+
+        if (isShitMode) {
+            // Case 2: App 2 Mode (Shit Diary)
+            // Accepts BOTH passwords
+            if (inputPassword === SHIT_PASSWORD || inputPassword === config.password) {
+                onAuthenticated('/shit');
+            } else {
+                setError('Incorrect password');
+                setTimeout(() => setError(''), 2000);
+            }
         } else {
-            setError('Incorrect password');
-            setTimeout(() => setError(''), 2000);
+            // Case 1: App 1 Mode (S3RAEON)
+            // ONLY accepts Main Password. Rejects Shit Password.
+            if (inputPassword === config.password) {
+                onAuthenticated('/');
+            } else {
+                setError('Incorrect password');
+                setTimeout(() => setError(''), 2000);
+            }
         }
     };
 
@@ -90,10 +109,10 @@ function AuthScreen({ onAuthenticated }) {
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ background: 'var(--bg)' }}>
+        <div className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-colors duration-500 ${isShitMode ? 'theme-shit bg-[var(--bg)]' : ''}`} style={{ background: 'var(--bg)' }}>
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-20 blur-[100px]" style={{ background: 'var(--primary)' }} />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-20 blur-[100px]" style={{ background: 'var(--accent)' }} />
+                <div className={`absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] transition-colors duration-500`} style={{ background: 'var(--primary)' }} />
+                <div className={`absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] transition-colors duration-500`} style={{ background: 'var(--accent)' }} />
             </div>
 
             <motion.div
@@ -111,8 +130,10 @@ function AuthScreen({ onAuthenticated }) {
                 {mode === 'login' && (
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div className="text-center">
-                            <h2 className="text-2xl font-bold mb-2 text-gradient">Welcome Back</h2>
-                            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Enter password to unlock S3RΛEON</p>
+                            <h2 className={`text-2xl font-bold mb-2 ${isShitMode ? 'text-[var(--primary)]' : 'text-gradient'}`}>
+                                {isShitMode ? "SHIT'S DIARY" : "Welcome Back"}
+                            </h2>
+                            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Enter password to unlock {isShitMode ? "Diary" : "S3RΛEON"}</p>
                         </div>
 
                         <div className="relative">
@@ -138,16 +159,38 @@ function AuthScreen({ onAuthenticated }) {
                             {error && <p className="text-red-400 text-xs text-center mt-2">{error}</p>}
                         </div>
 
+                        {/* Custom Auth Toggle Switch */}
+                        <div className="flex bg-[var(--bg-elevated)] p-1 rounded-full relative mb-6 cursor-pointer border border-[var(--border)] h-12" onClick={() => setIsShitMode(!isShitMode)}>
+                            {/* Sliding Background */}
+                            <motion.div
+                                className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full shadow-sm z-0 ${isShitMode ? 'bg-[var(--primary)]' : 'bg-purple-600'}`}
+                                animate={{ left: isShitMode ? '50%' : '4px' }}
+                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            />
+
+                            {/* Left Side: S3RAEON */}
+                            <div className={`flex-1 flex items-center justify-center relative z-10 text-sm font-bold transition-colors duration-300 ${!isShitMode ? 'text-white' : 'text-[var(--text-muted)]'}`}>
+                                S3RΛEON
+                            </div>
+
+                            {/* Right Side: DIARY */}
+                            <div className={`flex-1 flex items-center justify-center relative z-10 text-sm font-bold transition-colors duration-300 ${isShitMode ? 'text-white' : 'text-[var(--text-muted)]'}`}>
+                                DIARY
+                            </div>
+                        </div>
+
                         <button type="submit" className="btn-primary w-full">Unlock</button>
 
-                        <button
-                            type="button"
-                            onClick={() => setMode('recovery')}
-                            className="w-full text-xs text-center hover:underline"
-                            style={{ color: 'var(--text-muted)' }}
-                        >
-                            Forgot Password?
-                        </button>
+                        <div className="flex justify-center items-center px-1">
+                            <button
+                                type="button"
+                                onClick={() => setMode('recovery')}
+                                className="text-xs hover:underline"
+                                style={{ color: 'var(--text-muted)' }}
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
                     </form>
                 )}
 

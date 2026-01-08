@@ -90,11 +90,11 @@ const ENTRIES_KEY = 'data/entries.json';
 /**
  * Save all entries to Storj
  */
-export async function saveEntries(entries) {
+export async function saveEntries(entries, bucketName = BUCKET_NAME) {
     const json = JSON.stringify(entries, null, 2);
 
     const command = new PutObjectCommand({
-        Bucket: BUCKET_NAME,
+        Bucket: bucketName,
         Key: ENTRIES_KEY,
         Body: json,
         ContentType: 'application/json',
@@ -107,10 +107,10 @@ export async function saveEntries(entries) {
 /**
  * Load all entries from Storj
  */
-export async function loadEntries() {
+export async function loadEntries(bucketName = BUCKET_NAME) {
     try {
         const command = new GetObjectCommand({
-            Bucket: BUCKET_NAME,
+            Bucket: bucketName,
             Key: ENTRIES_KEY,
             ResponseCacheControl: 'no-cache, no-store, must-revalidate',
         });
@@ -138,16 +138,16 @@ let saveLock = Promise.resolve();
  * Critical: Each save waits for the previous to complete,
  * ensuring we always load the latest data before merging.
  */
-export async function saveEntry(dateStr, entryData) {
+export async function saveEntry(dateStr, entryData, bucketName = BUCKET_NAME) {
     // Chain this save operation behind any pending saves
     const saveOperation = saveLock.then(async () => {
-        const entries = await loadEntries();
+        const entries = await loadEntries(bucketName);
         entries[dateStr] = {
             ...entries[dateStr],
             ...entryData,
             updatedAt: new Date().toISOString(),
         };
-        await saveEntries(entries);
+        await saveEntries(entries, bucketName);
         return entries;
     }).catch(error => {
         console.error('Error in saveEntry:', error);
@@ -178,10 +178,10 @@ export default {
     getPresignedUrl,
 };
 // Load App Config (Password, etc.)
-export const loadConfig = async () => {
+export const loadConfig = async (bucketName = STORJ_CONFIG.bucket) => {
     try {
         const command = new GetObjectCommand({
-            Bucket: STORJ_CONFIG.bucket,
+            Bucket: bucketName,
             Key: 'data/config.json',
             ResponseCacheControl: 'no-cache, no-store, must-revalidate',
         });
@@ -198,10 +198,10 @@ export const loadConfig = async () => {
 };
 
 // Save App Config
-export const saveConfig = async (config) => {
+export const saveConfig = async (config, bucketName = STORJ_CONFIG.bucket) => {
     try {
         const command = new PutObjectCommand({
-            Bucket: STORJ_CONFIG.bucket,
+            Bucket: bucketName,
             Key: 'data/config.json',
             Body: JSON.stringify(config),
             ContentType: 'application/json',
