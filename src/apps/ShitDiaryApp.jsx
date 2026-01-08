@@ -152,11 +152,7 @@ function ShitEntryEditor() {
         setTimeout(() => setSaved(false), 2000);
     };
 
-    // Format date for display
-    const formatDate = (dateStr) => {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' });
-    };
+
 
     return (
         <div className="page p-4">
@@ -249,10 +245,7 @@ function ShitHistory() {
     // Sort entries by date descending
     const sortedDates = Object.keys(entries).sort((a, b) => new Date(b) - new Date(a));
 
-    const formatDate = (dateStr) => {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
-    };
+
 
     return (
         <div className="page p-4">
@@ -277,7 +270,7 @@ function ShitHistory() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="font-bold text-[var(--text)]">
-                                        {formatDate(date)}
+                                        {formatDate(date, 'EEE, MMM d')}
                                     </div>
                                     <div className="text-sm text-[var(--text-muted)] truncate">
                                         {entry.journal || 'No text written...'}
