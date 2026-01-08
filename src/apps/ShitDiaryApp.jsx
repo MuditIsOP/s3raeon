@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { Routes, Route, useLocation, Link, useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { loadEntries, saveEntry } from '../storj';
-import { getTodayIST } from '../utils/timeUtils';
+import { getTodayIST, formatDate } from '../utils/timeUtils';
 import { DiaryContext } from '../App';
 import Header from '../components/Header';
 import Stats from '../pages/Stats';
@@ -161,9 +161,20 @@ function ShitEntryEditor() {
     return (
         <div className="page p-4">
             <Header
-                title={isToday ? "SHIT'S DIARY" : formatDate(targetDate)}
+                title={!isToday ? formatDate(targetDate) : null}
                 onClose={!isToday ? () => navigate('/shit/history') : undefined}
             />
+
+            {isToday && (
+                <div className="mb-6 mt-2">
+                    <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '2.25rem', fontWeight: 500, color: 'var(--text)' }}>
+                        Hi, Shit
+                    </h1>
+                    <p className="text-sm font-medium uppercase tracking-wide text-[var(--text-muted)]">
+                        {formatDate(todayIST, 'EEE')} · {formatDate(todayIST, 'MMM d')}
+                    </p>
+                </div>
+            )}
 
             <div className="card mb-6 mt-4">
                 <div className="flex items-center justify-between mb-4">
