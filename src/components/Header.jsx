@@ -20,7 +20,10 @@ function Header({ title, showStreak = false, showProfile = true, onClose }) {
             <div className="header-top">
                 <div className="flex items-center gap-3">
                     <div className="logo">
-                        <span className="logo-text">S3RΛ<span className="logo-accent">EON</span></span>
+                        <span className="logo-text">
+                            {isShitDiary ? 'SHIT' : 'S3RΛ'}
+                            <span className="logo-accent">EON</span>
+                        </span>
                     </div>
                 </div>
 

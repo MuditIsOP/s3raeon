@@ -185,7 +185,7 @@ function AuthScreen({ onAuthenticated }) {
                             <button
                                 type="button"
                                 onClick={() => setMode('recovery')}
-                                className="text-xs hover:underline"
+                                className={`text-xs hover:underline transition-opacity duration-300 ${isShitMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                                 style={{ color: 'var(--text-muted)' }}
                             >
                                 Forgot Password?
