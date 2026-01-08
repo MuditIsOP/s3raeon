@@ -115,7 +115,7 @@ function Profile() {
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="page">
-            <Header title="Profile" showProfile={false} onClose={() => navigate('/')} />
+            <Header title="Profile" showProfile={false} onClose={() => navigate(bucketName === 'mudit-diary' ? '/shit' : '/')} />
 
             <div className="flex flex-col items-center mb-8">
                 <div
