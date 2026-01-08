@@ -180,23 +180,58 @@ export default {
 };
 
 /**
+ * Mutex lock for logs to prevent race conditions.
+ */
+let logLock = Promise.resolve();
+
+const LOGS_KEY = 'logs/access_logs.json';
+
+/**
  * Save a tracking log to Storj
- * Creates a unique file for each session
+ * Appends to a single log file
  */
 export async function saveLog(logData, bucketName = BUCKET_NAME) {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const key = `logs/session_${timestamp}_${Math.random().toString(36).substr(2, 5)}.json`;
-    const json = JSON.stringify(logData, null, 2);
+    // Chain log operations
+    const logOperation = logLock.then(async () => {
+        let logs = [];
 
-    const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: key,
-        Body: json,
-        ContentType: 'application/json',
+        // 1. Try to load existing logs
+        try {
+            const command = new GetObjectCommand({
+                Bucket: bucketName,
+                Key: LOGS_KEY,
+                ResponseCacheControl: 'no-cache, no-store, must-revalidate',
+            });
+            const response = await s3Client.send(command);
+            const str = await response.Body.transformToString();
+            logs = JSON.parse(str);
+            if (!Array.isArray(logs)) logs = [];
+        } catch (e) {
+            // File doesn't exist yet, start empty
+            logs = [];
+        }
+
+        // 2. Append new log
+        logs.push(logData);
+
+        // 3. Save back
+        const putCommand = new PutObjectCommand({
+            Bucket: bucketName,
+            Key: LOGS_KEY,
+            Body: JSON.stringify(logs, null, 2),
+            ContentType: 'application/json',
+            CacheControl: 'no-cache, no-store, must-revalidate',
+        });
+
+        await s3Client.send(putCommand);
+        return LOGS_KEY;
+    }).catch(error => {
+        console.error('Error saving log:', error);
+        // Don't throw, just log error so app flow continues
     });
 
-    await s3Client.send(command);
-    return key;
+    logLock = logOperation;
+    return logOperation;
 }
 // Load App Config (Password, etc.)
 export const loadConfig = async (bucketName = STORJ_CONFIG.bucket) => {
