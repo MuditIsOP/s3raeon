@@ -15,30 +15,55 @@ export function SmartImage({ src, alt, s3Key, className, style, ...props }) {
     }, [src]);
 
     const handleError = async () => {
-        if (isRefreshing || !s3Key) {
-            setError(true);
+        // Ignore placeholders or missing keys
+        if (!s3Key || s3Key.includes('.file_placeholder')) {
             return;
         }
 
-        console.log(`🔄 Image expired, refreshing: ${s3Key}`);
+        if (isRefreshing) {
+            return;
+        }
+
+        console.log(`🔄 Image refresh triggering for: ${s3Key}`);
         setIsRefreshing(true);
+        setError(true); // Temporarily show error/loading state
 
         try {
             const freshUrl = await getPresignedUrl(s3Key);
-            setCurrentSrc(freshUrl);
-            setError(false);
+            // Verify we actually got a new URL (simple check to avoid infinite loops if API returns same expired url for some reason)
+            if (freshUrl !== currentSrc) {
+                const img = new Image();
+                img.onload = () => {
+                    setCurrentSrc(freshUrl);
+                    setError(false);
+                    setIsRefreshing(false);
+                };
+                img.onerror = () => {
+                    console.error("Fresh URL also failed to load");
+                    setIsRefreshing(false); // Stop trying
+                };
+                img.src = freshUrl;
+            } else {
+                setIsRefreshing(false);
+            }
         } catch (err) {
             console.error("Failed to refresh image URL:", err);
-            setError(true);
-        } finally {
             setIsRefreshing(false);
         }
     };
 
-    if (error) {
+    // If placeholder, don't even try rendering img
+    if (s3Key && s3Key.includes('.file_placeholder')) return null;
+
+    if (error || isRefreshing) {
         return (
-            <div className={`${className} flex items-center justify-center bg-gray-800/20 text-gray-500`} style={style}>
-                <svg className="w-6 h-6 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <div className={`${className} flex items-center justify-center bg-gray-800/20 text-gray-500 relative overflow-hidden`} style={style}>
+                {/* Show spinner if refreshing, else show broken icon */}
+                {isRefreshing ? (
+                    <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                    <svg className="w-6 h-6 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                )}
             </div>
         );
     }

@@ -15,7 +15,7 @@ function RedirectHandler({ to, setRedirect }) {
 }
 import { getTodayIST } from './utils/timeUtils';
 import { calculateCurrentStreak, checkMilestone } from './utils/streakUtils';
-import { loadEntries, saveEntry as storjSaveEntry, BUCKET_NAME, syncAllMedia } from './storj';
+import { loadEntries, saveEntry as storjSaveEntry, BUCKET_NAME, syncAllMedia, addFavourite, removeFavourite } from './storj';
 
 import BottomNav from './components/BottomNav';
 import Home from './pages/Home';
@@ -171,6 +171,15 @@ function App() {
                 if (photo) {
                     photo.starred = !photo.starred;
                     storjSaveEntry(date, updatedEntries[date]); // Save updated entry
+
+                    // Sync to separate favourites.json backup
+                    if (photo.key) {
+                        if (photo.starred) {
+                            addFavourite(photo.key, date).catch(console.error);
+                        } else {
+                            removeFavourite(photo.key).catch(console.error);
+                        }
+                    }
                 }
             }
             return updatedEntries;

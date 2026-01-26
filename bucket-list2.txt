@@ -1,0 +1,54 @@
+﻿[dotenv@17.2.3] injecting env (12) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+≡ƒôª Listing ALL objects in bucket: arshita-diary
+
+Total objects: 43
+  ≡ƒô╕ Photos: 31
+  ≡ƒÄÖ∩╕Å  Audio: 8
+  ≡ƒôü Data: 2
+  ≡ƒô¥ Logs: 0
+  Γ¥ô Other: 2
+
+--- ALL OBJECTS ---
+1. audio/2026-01-01-morning.webm (6042427 bytes)
+2. audio/2026-01-02-morning.webm (6599064 bytes)
+3. audio/2026-01-03-morning.webm (5766029 bytes)
+4. audio/2026-01-04-morning.webm (6694078 bytes)
+5. audio/2026-01-05-morning.webm (5541429 bytes)
+6. audio/2026-01-06-morning.webm (7382570 bytes)
+7. audio/2026-01-07-morning.webm (2528658 bytes)
+8. audio/2026-01-09-morning.webm (6737752 bytes)
+9. data/config.json (129 bytes)
+10. data/entries.json (54240 bytes)
+11. photos/2026-01-01/.file_placeholder (0 bytes)
+12. photos/2026-01-01/1767375262703.jpg (202658 bytes)
+13. photos/2026-01-01/1767375273736.jpg (374041 bytes)
+14. photos/2026-01-01/1767375282746.jpg (276826 bytes)
+15. photos/2026-01-01/1767375291962.jpg (887391 bytes)
+16. photos/2026-01-01/1767375300511.jpg (385229 bytes)
+17. photos/2026-01-02/.file_placeholder (0 bytes)
+18. photos/2026-01-02/1767380946434 (1).jpg (4165921 bytes)
+19. photos/2026-01-02/1767380975038 (1).jpg (480842 bytes)
+20. photos/2026-01-02/1767381019866.jpg (381058 bytes)
+21. photos/2026-01-02/1767381051328.jpg (983106 bytes)
+22. photos/2026-01-02/1767381062941.jpg (1501382 bytes)
+23. photos/2026-01-03/1767464867113.jpg (2185439 bytes)
+24. photos/2026-01-03/1767464901093.jpg (272881 bytes)
+25. photos/2026-01-03/1767464924941.jpg (1832791 bytes)
+26. photos/2026-01-03/1767464936580.jpg (2647549 bytes)
+27. photos/2026-01-03/1767464974611.jpg (76327 bytes)
+28. photos/2026-01-04/1767554219512.jpg (796790 bytes)
+29. photos/2026-01-04/1767554232376.jpg (291428 bytes)
+30. photos/2026-01-04/1767554251597.jpg (2793804 bytes)
+31. photos/2026-01-04/1767554264377.jpg (312266 bytes)
+32. photos/2026-01-04/1767554684920.jpg (423312 bytes)
+33. photos/2026-01-05/1767638635794.jpg (290008 bytes)
+34. photos/2026-01-05/1767638653208.jpg (544138 bytes)
+35. photos/2026-01-05/1767638664594.jpg (283652 bytes)
+36. photos/2026-01-05/1767638678885.jpg (134916 bytes)
+37. photos/2026-01-05/1767638709787.jpg (90586 bytes)
+38. photos/2026-01-06/1767811676351.jpg (1722089 bytes)
+39. photos/2026-01-06/1767811692965.jpg (674042 bytes)
+40. photos/2026-01-06/1767811706041.jpg (2012410 bytes)
+41. photos/2026-01-07/1767812701132.jpg (145684 bytes)
+42. profile/photo.jpeg (1206196 bytes)
+43. profile/profile.json (589 bytes)
