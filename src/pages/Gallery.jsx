@@ -45,6 +45,11 @@ function Gallery() {
                 if (moodFilter && entry.mood !== moodFilter) return;
 
                 entry.photos.forEach((photo, index) => {
+                    // Skip placeholder files and invalid entries
+                    if (!photo.url || !photo.key) return;
+                    if (photo.key.includes('.file_placeholder')) return;
+                    if (photo.size === 0) return;
+
                     const photoData = { ...photo, date, index, dayOfMonth: getDayOfMonth(date), mood: entry.mood, journal: entry.journal };
                     all.push(photoData);
 
