@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import AudioVisualizer from './AudioVisualizer';
+import { SmartAudioTrigger } from './SmartMedia';
 
 function PremiumAudioPlayer({ audioUrl }) {
     const audioRef = useRef(null);
@@ -74,40 +75,46 @@ function PremiumAudioPlayer({ audioUrl }) {
 
     return (
         <div className="w-full">
-            <audio
-                ref={audioRef}
-                src={audioUrl}
-                crossOrigin="anonymous"
-                onEnded={() => setIsPlaying(false)}
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
-            />
+            <SmartAudioTrigger src={audioUrl}>
+                {({ src: freshAudioUrl }) => (
+                    <>
+                        <audio
+                            ref={audioRef}
+                            src={freshAudioUrl}
+                            crossOrigin="anonymous"
+                            onEnded={() => setIsPlaying(false)}
+                            onTimeUpdate={handleTimeUpdate}
+                            onLoadedMetadata={handleLoadedMetadata}
+                        />
 
-            {/* Visualizer */}
-            <div className="mb-4">
-                <AudioVisualizer audioRef={audioRef} audioUrl={audioUrl} isRecording={false} isPlaying={isPlaying} />
-            </div>
+                        {/* Visualizer */}
+                        <div className="mb-4">
+                            <AudioVisualizer audioRef={audioRef} audioUrl={freshAudioUrl} isRecording={false} isPlaying={isPlaying} />
+                        </div>
 
-            {/* Progress bar */}
-            <div
-                className="h-1.5 rounded-full mb-3 cursor-pointer"
-                style={{ background: 'var(--bg-elevated)' }}
-                onClick={handleSeek}
-            >
-                <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                        width: duration ? `${(currentTime / duration) * 100}%` : '0%',
-                        background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)'
-                    }}
-                />
-            </div>
+                        {/* Progress bar */}
+                        <div
+                            className="h-1.5 rounded-full mb-3 cursor-pointer"
+                            style={{ background: 'var(--bg-elevated)' }}
+                            onClick={handleSeek}
+                        >
+                            <div
+                                className="h-full rounded-full transition-all"
+                                style={{
+                                    width: duration ? `${(currentTime / duration) * 100}%` : '0%',
+                                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)'
+                                }}
+                            />
+                        </div>
 
-            {/* Time display */}
-            <div className="flex justify-between text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
-            </div>
+                        {/* Time display */}
+                        <div className="flex justify-between text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+                            <span>{formatTime(currentTime)}</span>
+                            <span>{formatTime(duration)}</span>
+                        </div>
+                    </>
+                )}
+            </SmartAudioTrigger>
 
             {/* Controls */}
             <div className="flex items-center justify-center gap-4">

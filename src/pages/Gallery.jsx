@@ -4,6 +4,7 @@ import { useDiary } from '../App';
 import { formatDate, getDayOfMonth } from '../utils/timeUtils';
 import { DateTime } from 'luxon';
 import Header from '../components/Header';
+import { SmartImage } from '../components/SmartMedia';
 
 const MOOD_CONFIG = [
     { value: 1, label: 'Great', color: '#22c55e' },
@@ -269,7 +270,7 @@ function PhotoTile({ photo, onClick, onLongPress }) {
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="photo-item" onClick={onClick} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onMouseDown={handleTouchStart} onMouseUp={handleTouchEnd} onMouseLeave={handleTouchEnd}>
-            <img src={photo.url} alt="" loading="lazy" />
+            <SmartImage src={photo.url} s3Key={photo.key} alt="" loading="lazy" />
             {photo.starred && (
                 <div className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)', color: '#FBBF24' }}>
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
@@ -342,7 +343,7 @@ function PhotoModal({ photo, onClose, onStar, allPhotos, currentIndex, onNavigat
                 )}
 
                 {/* Image - clicking does NOT close */}
-                <img src={photo.url} alt="" className="max-w-full max-h-[70vh] object-contain rounded-xl" onClick={(e) => e.stopPropagation()} />
+                <SmartImage src={photo.url} s3Key={photo.key} alt="" className="max-w-full max-h-[70vh] object-contain rounded-xl" onClick={(e) => e.stopPropagation()} />
 
                 <div className="mt-4 flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
                     <span style={{ color: 'var(--text-muted)' }}>{formatDate(photo.date)}</span>

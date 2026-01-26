@@ -6,6 +6,7 @@ import { uploadAudio } from '../storj';
 import affirmations from '../data/affirmations.json';
 import AudioVisualizer from './AudioVisualizer';
 import RecordingModal from './RecordingModal';
+import { SmartAudioTrigger } from './SmartMedia';
 
 const MIN_RECORDING_SECONDS = 60;
 
@@ -118,34 +119,40 @@ function MorningSection({ todayEntry, isUnlocked }) {
             <AnimatePresence mode="wait">
                 {audioUrl ? (
                     <motion.div key="playback" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <audio
-                            ref={audioRef}
-                            src={audioUrl}
-                            crossOrigin="anonymous"
-                            onEnded={() => setIsPlaying(false)}
-                            onTimeUpdate={handleTimeUpdate}
-                            onLoadedMetadata={handleLoadedMetadata}
-                        />
+                        <SmartAudioTrigger src={audioUrl} s3Key={todayEntry?.audioKey || `audio/${today}-morning.webm`}>
+                            {({ src: freshAudioUrl }) => (
+                                <>
+                                    <audio
+                                        ref={audioRef}
+                                        src={freshAudioUrl}
+                                        crossOrigin="anonymous"
+                                        onEnded={() => setIsPlaying(false)}
+                                        onTimeUpdate={handleTimeUpdate}
+                                        onLoadedMetadata={handleLoadedMetadata}
+                                    />
 
-                        {/* Visualizer for Playback */}
-                        <div className="mb-4">
-                            <AudioVisualizer audioRef={audioRef} audioUrl={audioUrl} isRecording={false} isPlaying={isPlaying} />
-                        </div>
+                                    {/* Visualizer for Playback */}
+                                    <div className="mb-4">
+                                        <AudioVisualizer audioRef={audioRef} audioUrl={freshAudioUrl} isRecording={false} isPlaying={isPlaying} />
+                                    </div>
 
-                        {/* Progress bar */}
-                        <div
-                            className="h-1.5 rounded-full mb-3 cursor-pointer"
-                            style={{ background: 'var(--bg-elevated)' }}
-                            onClick={handleSeek}
-                        >
-                            <div
-                                className="h-full rounded-full transition-all"
-                                style={{
-                                    width: duration ? `${(currentTime / duration) * 100}%` : '0%',
-                                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)'
-                                }}
-                            />
-                        </div>
+                                    {/* Progress bar */}
+                                    <div
+                                        className="h-1.5 rounded-full mb-3 cursor-pointer"
+                                        style={{ background: 'var(--bg-elevated)' }}
+                                        onClick={handleSeek}
+                                    >
+                                        <div
+                                            className="h-full rounded-full transition-all"
+                                            style={{
+                                                width: duration ? `${(currentTime / duration) * 100}%` : '0%',
+                                                background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)'
+                                            }}
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </SmartAudioTrigger>
 
                         {/* Time display */}
                         <div className="flex justify-between text-xs mb-4" style={{ color: 'var(--text-muted)' }}>

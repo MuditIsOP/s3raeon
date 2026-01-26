@@ -5,6 +5,7 @@ import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { useState, useEffect } from 'react';
 import PremiumAudioPlayer from './PremiumAudioPlayer';
+import { SmartImage, SmartAudioTrigger } from './SmartMedia';
 
 const STORJ_CONFIG = {
     bucket: import.meta.env.VITE_STORJ_BUCKET || 'arshita-diary',
@@ -13,52 +14,6 @@ const STORJ_CONFIG = {
 function DayViewModal({ date, entry, onClose, mode = 'full' }) {
     const [photoUrls, setPhotoUrls] = useState({});
     const [audioUrl, setAudioUrl] = useState(null);
-
-    useEffect(() => {
-        if (entry?.photos) {
-            entry.photos.forEach(async (photo, index) => {
-                if (photo?.url) {
-                    try {
-                        let url = photo.url;
-                        // If it's a raw generic URL, sign it (if needed) or just use it.
-                        // Assuming photo.url is the key if it doesn't start with http
-                        if (!url.startsWith('http')) {
-                            const command = new GetObjectCommand({
-                                Bucket: STORJ_CONFIG.bucket,
-                                Key: url,
-                            });
-                            url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-                        }
-                        setPhotoUrls(prev => ({ ...prev, [index]: url }));
-                    } catch (e) {
-                        console.error("Failed to load photo", e);
-                    }
-                }
-            });
-        }
-
-        if (entry?.audioUrl) {
-            const loadAudio = async () => {
-                try {
-                    let url = entry.audioUrl;
-                    // If stored as key (not full URL), sign it
-                    if (!url.startsWith('http')) {
-                        const command = new GetObjectCommand({
-                            Bucket: STORJ_CONFIG.bucket,
-                            Key: url
-                        });
-                        url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-                    }
-                    setAudioUrl(url);
-                } catch (e) {
-                    console.error("Failed to load audio", e);
-                }
-            };
-            loadAudio();
-        } else {
-            setAudioUrl(null);
-        }
-    }, [entry]);
 
     if (!entry) return null;
 
@@ -126,11 +81,12 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                             <div className="grid grid-cols-2 gap-3">
                                 {entry.photos.map((photo, i) => (
                                     <div key={i} className="aspect-square rounded-2xl overflow-hidden bg-white/5 relative shadow-lg group">
-                                        {photoUrls[i] ? (
-                                            <img src={photoUrls[i]} alt="Memory" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-xs text-muted">Loading...</div>
-                                        )}
+                                        <SmartImage
+                                            src={photo.url}
+                                            s3Key={photo.key}
+                                            alt="Memory"
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        />
                                         {photo.starred && <div className="absolute top-2 right-2 text-yellow-400 drop-shadow-md">★</div>}
                                     </div>
                                 ))}
@@ -209,16 +165,11 @@ function DayViewModal({ date, entry, onClose, mode = 'full' }) {
                                     </div>
 
                                     <div className="relative z-10">
-                                        {audioUrl ? (
-                                            <PremiumAudioPlayer audioUrl={audioUrl} />
-                                        ) : (
-                                            <div className="h-32 flex items-center justify-center bg-black/20 rounded-xl border border-white/5">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                                                    <span className="text-xs text-[var(--text-muted)]">Loading audio...</span>
-                                                </div>
-                                            </div>
-                                        )}
+                                        <SmartAudioTrigger src={entry.audioUrl} s3Key={entry.audioKey}>
+                                            {({ src: freshAudioUrl }) => (
+                                                <PremiumAudioPlayer audioUrl={freshAudioUrl} />
+                                            )}
+                                        </SmartAudioTrigger>
                                     </div>
                                 </div>
                             </div>

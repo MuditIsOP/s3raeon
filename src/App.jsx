@@ -15,7 +15,7 @@ function RedirectHandler({ to, setRedirect }) {
 }
 import { getTodayIST } from './utils/timeUtils';
 import { calculateCurrentStreak, checkMilestone } from './utils/streakUtils';
-import { loadEntries, saveEntry as storjSaveEntry, BUCKET_NAME } from './storj';
+import { loadEntries, saveEntry as storjSaveEntry, BUCKET_NAME, syncAllMedia } from './storj';
 
 import BottomNav from './components/BottomNav';
 import Home from './pages/Home';
@@ -105,15 +105,22 @@ function App() {
                     timeoutPromise
                 ]);
 
-                setEntries(entriesData || {});
-
                 // Update today's entry
                 const today = getTodayIST();
+                setEntries(entriesData || {});
                 setTodayEntry(entriesData?.[today] || null);
 
                 // Calculate streak
                 const streak = calculateCurrentStreak(entriesData || {});
                 setCurrentStreak(streak);
+
+                // BACKGROUND SYNC: Refresh all media links (takes time, do it after initial load)
+                syncAllMedia().then(updatedEntries => {
+                    if (updatedEntries) {
+                        setEntries(prev => ({ ...prev, ...updatedEntries }));
+                        setTodayEntry(updatedEntries[today] || null);
+                    }
+                });
             } catch (error) {
                 console.error('Error loading entries:', error);
                 // Fallback to empty state on error/timeout

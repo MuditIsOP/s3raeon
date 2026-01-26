@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Routes, Route, useLocation, Link, useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { loadEntries, saveEntry } from '../storj';
+import { loadEntries, BUCKET_NAME, syncAllMedia } from '../storj';
 import { getTodayIST, formatDate } from '../utils/timeUtils';
 import { DiaryContext } from '../App';
 import Header from '../components/Header';
@@ -54,6 +54,13 @@ function ShitDiaryProvider({ children }) {
         try {
             const data = await loadEntries(SHIT_BUCKET);
             setEntries(data || {});
+
+            // BACKGROUND SYNC: Refresh all media links (takes time, do it after initial load)
+            syncAllMedia(SHIT_BUCKET).then(updatedEntries => {
+                if (updatedEntries) {
+                    setEntries(prev => ({ ...prev, ...updatedEntries }));
+                }
+            });
 
             const today = getTodayIST();
             setTodayEntry(data?.[today] || null);

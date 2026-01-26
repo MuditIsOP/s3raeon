@@ -168,16 +168,58 @@ export async function getEntry(dateStr) {
     return entries[dateStr] || null;
 }
 
-export default {
-    uploadPhoto,
-    uploadAudio,
-    loadEntries,
-    saveEntries,
-    saveEntry,
-    getEntry,
-    getPresignedUrl,
-    saveLog,
-};
+
+
+/**
+ * Mass refresh all media URLs in entries
+ */
+export async function refreshAllMediaUrls(entries, bucketName = BUCKET_NAME) {
+    console.log(`♻️ Refreshing media URLs for ${bucketName}...`);
+    const refreshedEntries = { ...entries };
+    let hasChanges = false;
+
+    const refreshPromises = [];
+
+    for (const [date, entry] of Object.entries(refreshedEntries)) {
+        // 1. Refresh Photos
+        if (entry.photos && Array.isArray(entry.photos)) {
+            entry.photos.forEach((photo, idx) => {
+                if (photo.key) {
+                    refreshPromises.push(
+                        getPresignedUrl(photo.key).then(url => {
+                            if (photo.url !== url) {
+                                photo.url = url;
+                                hasChanges = true;
+                            }
+                        })
+                    );
+                }
+            });
+        }
+
+        // 2. Refresh Audio
+        if (entry.audioUrl) {
+            // Determine key from URL if not stored
+            // Audio keys are usually: audio/YYYY-MM-DD-morning.webm
+            const audioKey = entry.audioKey || `audio/${date}-morning.webm`;
+            refreshPromises.push(
+                getPresignedUrl(audioKey).then(url => {
+                    if (entry.audioUrl !== url) {
+                        entry.audioUrl = url;
+                        entry.audioKey = audioKey; // Ensure key is stored
+                        hasChanges = true;
+                    }
+                }).catch(() => {
+                    // If refresh fails, maybe the file doesn't exist
+                    console.warn(`Could not refresh audio for ${date}`);
+                })
+            );
+        }
+    }
+
+    await Promise.all(refreshPromises);
+    return { refreshedEntries, hasChanges };
+}
 
 /**
  * Mutex lock for logs to prevent race conditions.
@@ -272,20 +314,19 @@ export const saveConfig = async (config, bucketName = STORJ_CONFIG.bucket) => {
 };
 
 /**
- * Sync photos from Storj bucket to entries.json
- * Scans the bucket, finds missing photos, restores them with file sizes
+ * Sync all media (Photos & Audio) from Storj bucket to entries.json
+ * Renamed from syncPhotosFromBucket for clarity
  */
-export const syncPhotosFromBucket = async () => {
-    console.log('🔍 Syncing photos from bucket...');
+export const syncAllMedia = async (bucketName = BUCKET_NAME) => {
+    console.log(`🔍 Syncing media from bucket ${bucketName}...`);
 
-    // 1. List all photos in bucket
-    const bucketPhotos = [];
+    // 1. List all objects
+    const bucketObjects = [];
     let continuationToken = undefined;
 
     do {
         const listCommand = new ListObjectsV2Command({
-            Bucket: BUCKET_NAME,
-            Prefix: 'photos/',
+            Bucket: bucketName,
             ContinuationToken: continuationToken,
         });
 
@@ -293,87 +334,82 @@ export const syncPhotosFromBucket = async () => {
 
         if (response.Contents) {
             for (const item of response.Contents) {
-                // Key format: photos/YYYY-MM-DD/timestamp.jpg
-                const match = item.Key.match(/^photos\/(\d{4}-\d{2}-\d{2})\/(.+)$/);
-                if (match) {
-                    bucketPhotos.push({
-                        key: item.Key,
-                        date: match[1],
-                        filename: match[2],
-                        size: item.Size,
-                        lastModified: item.LastModified,
-                    });
-                }
+                bucketObjects.push(item);
             }
         }
 
         continuationToken = response.NextContinuationToken;
     } while (continuationToken);
 
-    console.log(`📸 Found ${bucketPhotos.length} photos in bucket`);
-
     // 2. Load current entries
-    const entries = await loadEntries();
+    const entries = await loadEntries(bucketName);
+    let hasChanges = false;
 
-    // 3. Group photos by date
-    const photosByDate = {};
-    for (const photo of bucketPhotos) {
-        if (!photosByDate[photo.date]) {
-            photosByDate[photo.date] = [];
-        }
-        photosByDate[photo.date].push(photo);
-    }
+    // 3. Process Photos (Prefix: photos/)
+    const photoObjects = bucketObjects.filter(o => o.Key.startsWith('photos/'));
+    for (const item of photoObjects) {
+        const match = item.Key.match(/^photos\/(\d{4}-\d{2}-\d{2})\/(.+)$/);
+        if (match) {
+            const date = match[1];
+            if (!entries[date]) entries[date] = {};
+            if (!entries[date].photos) entries[date].photos = [];
 
-    // 4. Restore missing photos
-    let restoredCount = 0;
-    let updatedCount = 0;
-
-    for (const [date, datePhotos] of Object.entries(photosByDate)) {
-        if (!entries[date]) {
-            entries[date] = {};
-        }
-
-        const existingPhotos = entries[date].photos || [];
-        const existingKeys = new Set(existingPhotos.map(p => p.key).filter(Boolean));
-
-        for (const photo of datePhotos) {
-            const existingPhoto = existingPhotos.find(p => p.key === photo.key);
-
-            if (!existingPhoto && !existingKeys.has(photo.key)) {
-                // Photo in bucket but not in entries - restore it!
-                console.log(`  ➕ Restoring ${photo.key}`);
-
-                const url = await getPresignedUrl(photo.key);
-
-                existingPhotos.push({
+            const existing = entries[date].photos.find(p => p.key === item.Key);
+            if (!existing) {
+                console.log(`  ➕ Restoring photo ${item.Key}`);
+                const url = await getPresignedUrl(item.Key);
+                entries[date].photos.push({
                     url: url,
-                    key: photo.key,
-                    size: photo.size,
-                    uploadedAt: photo.lastModified?.toISOString() || new Date().toISOString(),
+                    key: item.Key,
+                    size: item.Size,
+                    uploadedAt: item.LastModified?.toISOString() || new Date().toISOString(),
                     starred: false,
                 });
-                restoredCount++;
-            } else if (existingPhoto && !existingPhoto.size) {
-                // Update size if missing
-                existingPhoto.size = photo.size;
-                updatedCount++;
+                hasChanges = true;
+            } else if (!existing.size) {
+                existing.size = item.Size;
+                hasChanges = true;
             }
         }
+    }
 
-        entries[date].photos = existingPhotos;
+    // 4. Process Audio (Prefix: audio/)
+    const audioObjects = bucketObjects.filter(o => o.Key.startsWith('audio/'));
+    for (const item of audioObjects) {
+        // audio/YYYY-MM-DD-morning.webm
+        const match = item.Key.match(/^audio\/(\d{4}-\d{2}-\d{2})-morning\.webm$/);
+        if (match) {
+            const date = match[1];
+            if (!entries[date]) entries[date] = {};
+
+            if (!entries[date].audioUrl || entries[date].audioKey !== item.Key) {
+                console.log(`  ➕ Restoring audio ${item.Key}`);
+                const url = await getPresignedUrl(item.Key);
+                entries[date].audioUrl = url;
+                entries[date].audioKey = item.Key;
+                hasChanges = true;
+            }
+        }
     }
 
     // 5. Save if changes made
-    if (restoredCount > 0 || updatedCount > 0) {
-        await saveEntries(entries);
+    if (hasChanges) {
+        await saveEntries(entries, bucketName);
     }
 
-    console.log(`✅ Restored ${restoredCount}, updated sizes for ${updatedCount}`);
+    console.log(`✅ Sync complete for ${bucketName}. Changes: ${hasChanges}`);
+    return entries;
+};
 
-    return {
-        restoredCount,
-        updatedCount,
-        totalPhotosInBucket: bucketPhotos.length,
-        entries, // Return updated entries for UI refresh
-    };
+export default {
+    uploadPhoto,
+    uploadAudio,
+    loadEntries,
+    saveEntries,
+    saveEntry,
+    getEntry,
+    getPresignedUrl,
+    saveLog,
+    refreshAllMediaUrls,
+    syncAllMedia,
 };
