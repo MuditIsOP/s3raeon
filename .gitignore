@@ -115,3 +115,10 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Project-generated diagnostic artifacts
+bucket-check.txt
+bucket-list.txt
+bucket-list2.txt
+cleanup_debug.txt
+rebuild-log.txt
